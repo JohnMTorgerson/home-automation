@@ -1,0 +1,6 @@
+.env
+.DS_Store
+__pycache__
+
+wyze_sdk_fork/
+logs/
