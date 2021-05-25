@@ -4,3 +4,4 @@ __pycache__
 
 wyze_sdk_fork/
 logs/
+*.gcx

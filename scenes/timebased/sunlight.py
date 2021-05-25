@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 from pprint import pprint
 import datetime
 from suntime import Sun, SunTimeException
@@ -11,6 +12,12 @@ except:
 # import wyze_sdk
 # wyze_sdk.set_file_logger(__name__, 'tmp/log.log')
 
+try:
+    load_dotenv()
+    latitude = os.environ['LAT']
+    longitude = os.environ['LON']
+except Exception as e:
+    print(f"Error: could not load latitude and longitude from environment: {e}")
 
 
 def run(client=None,bulbs=[],bulb_props={},now=None) :
@@ -65,60 +72,112 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
     #     get_temp(times['sunrise'],times['sunset'])
 
 def get_brightness(srt,sst) :
-    return 75
+    args = {
+        'low': 50,
+        'high': 120, # the maximum is 100, but we can make this higher as long as ceiling <= 100
+        'floor': 0,
+        'ceiling': 100,
+        'steepness': 1/15, # unitless constant to adjust the steepness of the curve
+        'offset': 60, # positive offset makes changes happen later (in minutes). If 0, the steepest part of the curve will be right at sunrise/sunset
+    }
+
+    b = 100 # just a default in case all the conditionals fail for some reason
+
+    # MIDNIGHT TO SUNRISE
+    if srt < 0:
+        # print("MIDNIGHT TO SUNRISE")
+        args['time'] = srt
+        args['direction'] = 'ascending'
+        b = values_curve(args)
+    # SUNRISE TO MIDDAY
+    elif srt >= 0 and sst < 0 and abs(srt) < abs(sst):
+        # print("SUNRISE TO MIDDAY")
+        b = 100
+    # MIDDAY to SUNSET
+    elif srt > 0 and sst < 0 and abs(srt) >= abs(sst):
+        # print("MIDDAY to SUNSET")
+        args['time'] = sst
+        args['direction'] = 'descending'
+        b = values_curve(args)
+    # SUNSET TO MIDNIGHT
+    elif srt > 0 and sst >= 0:
+        # print("SUNSET TO MIDNIGHT")
+        args['time'] = sst
+        args['direction'] = 'descending'
+        b = values_curve(args)
+
+    return b
 
 def get_temp(srt,sst) :
     # sst is minutes since sunrise (so, negative if before sunrise)
     # sst is minutes since sunset (so, negative if before sunset)
-    warmest = 2400 # 1800 is the minimum possible value for mesh bulbs
-    coldest = 5900 # 6500 is the maximum possible value for mesh bulbs
-    floor = warmest + 100
-    ceiling = coldest - 100
-    range = coldest - warmest
-    steepness = 1/15 # unitless constant to adjust the steepness of the curve
-    offset = 0 # positive offset makes changes happen later (in minutes). If 0, the steepest part of the curve will be right at sunrise/sunset
+    warmest = 2400
+    coldest = 5900
+
+    args = {
+        'low': warmest, # 1800 is the minimum possible value for mesh bulbs
+        'high': coldest, # 6500 is the maximum possible value for mesh bulbs
+        'floor': warmest + 100,
+        'ceiling': coldest - 100,
+        'steepness': 1/15, # unitless constant to adjust the steepness of the curve
+        'offset': -5 # positive offset makes changes happen later (in minutes). If 0, the steepest part of the curve will be right at sunrise/sunset
+    }
+
     temp = 2700 # just a default in case all the conditionals fail for some reason
 
-    if range < 0:
+
+    if coldest < warmest:
         raise Exception('warmest temp must be a smaller value than coldest temp')
 
     # MIDNIGHT TO SUNRISE
     if srt < 0:
         print("MIDNIGHT TO SUNRISE")
-        # temp = range * -1 * math.atan((offset - srt) * steepness)/math.pi + warmest + range/2
-        temp = values_curve(srt,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='ascending',floor=floor,ceiling=ceiling)
+        # temp = values_curve(time=srt,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='ascending',floor=floor,ceiling=ceiling)
+        args['time'] = srt
+        args['direction'] = 'ascending'
+        temp = values_curve(args)
+
     # SUNRISE TO MIDDAY
     elif srt >= 0 and sst < 0 and abs(srt) < abs(sst):
         print("SUNRISE TO MIDDAY")
-        # temp = range * -1 * math.atan((offset - srt) * steepness)/math.pi + warmest + range/2
-        temp = values_curve(srt,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='ascending',floor=floor,ceiling=ceiling)
+        # temp = values_curve(time=srt,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='ascending',floor=floor,ceiling=ceiling)
+        args['time'] = srt
+        args['direction'] = 'ascending'
+        temp = values_curve(args)
+
     # MIDDAY to SUNSET
     elif srt > 0 and sst < 0 and abs(srt) >= abs(sst):
         print("MIDDAY to SUNSET")
-        # temp = range * math.atan((offset - sst) * steepness)/math.pi + warmest + range/2
-        temp = values_curve(sst,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='descending',floor=floor,ceiling=ceiling)
+        # temp = values_curve(time=sst,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='descending',floor=floor,ceiling=ceiling)
+        args['time'] = sst
+        args['direction'] = 'descending'
+        temp = values_curve(args)
     # SUNSET TO MIDNIGHT
     elif srt > 0 and sst >= 0:
         print("SUNSET TO MIDNIGHT")
-        # temp = range * math.atan((offset - sst) * steepness)/math.pi + warmest + range/2
-        temp = values_curve(sst,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='descending',floor=floor,ceiling=ceiling)
+        # temp = values_curve(time=sst,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='descending',floor=floor,ceiling=ceiling)
+        args['time'] = sst
+        args['direction'] = 'descending'
+        temp = values_curve(args)
 
     # temp = range * math.atan((offset - time) * steepness)/math.pi + warmest + range/2
 
     return temp
 
-def values_curve(time,offset=0,low=0,high=100,steepness=1/15,direction='descending',floor=float('-inf'),ceiling=float('inf')):
+def values_curve(args):
     '''
     Create a value (e.g. temp or brightness) based on the arctan of a given time input; arctan is used in order to generate a smooth curve between high and low horizontal asymptotes
 
-    :param int time: the time (in minutes) since event, i.e. sunrise/sunset (so, time is negative if event is in the future)
-    :param int offset: slide the curve earlier or later relative to time_anchor; positive offset makes changes happen later (in minutes)
-    :param int low: the lower asymptote limit
-    :param int high: the upper asymptote limit
-    :param float floor: an optional hard minimum, clipping the lower asymptote limit
-    :param float ceiling: an optional hard maximum, clipping the upper asymptote limit
-    :param float steepness: a unitless constant to adjust the steepness of the curve
-    :param str direction: should be either 'descending' or 'ascending', adjusts direction of curve
+    :param dict args: can contain any of the following properties:
+
+        int time: the time (in minutes) since event, i.e. sunrise/sunset (so, time is negative if event is in the future)
+        int offset: slide the curve earlier or later relative to time_anchor; positive offset makes changes happen later (in minutes)
+        int low: the lower asymptote limit
+        int high: the upper asymptote limit
+        float floor: an optional hard minimum, clipping the lower asymptote limit
+        float ceiling: an optional hard maximum, clipping the upper asymptote limit
+        float steepness: a unitless constant to adjust the steepness of the curve
+        str direction: should be either 'descending' or 'ascending', adjusts direction of curve
 
     :return: the value (e.g. temp or brightness)
     :rtype: int
@@ -127,21 +186,34 @@ def values_curve(time,offset=0,low=0,high=100,steepness=1/15,direction='descendi
     :raises ValueError: if floor > ceiling
     '''
 
-    range = high - low
+    defaults = {
+        'time':0,
+        'offset':0,
+        'low':0,
+        'high':100,
+        'steepness':1/15,
+        'direction':'descending',
+        'floor':float('-inf'),
+        'ceiling':float('inf')
+    }
+
+    args = {**defaults, **args}
+
+    range = args['high'] - args['low']
     if range < 0:
-        raise ValueError('min (warmest temp or lowest brightness) must be a smaller value than max (coolest temp or highest brightness)')
+        raise ValueError('Error: min (warmest temp or lowest brightness) must be a smaller value than max (coolest temp or highest brightness)')
 
-    if floor > ceiling:
-        raise ValueError('floor must be less than or equal to ceiling')
+    if args['floor'] > args['ceiling']:
+        raise ValueError('Error: floor must be less than or equal to ceiling')
 
-    direction = 1 if direction == 'descending' else -1
-    return int(min(ceiling,max(floor,direction * range * math.atan((offset - time) * steepness)/math.pi + low + range/2)))
+    if args['direction'] != 'ascending' and args['direction'] != 'descending':
+        raise ValueError("Error: direction must be either 'ascending' or 'descending'")
+
+    direction = 1 if args['direction'] == 'descending' else -1
+    return int(min(args['ceiling'],max(args['floor'],direction * range * math.atan((args['offset'] - args['time']) * args['steepness'])/math.pi + args['low'] + range/2)))
 
 def get_relative_time(now=datetime.datetime.now(tz=ZoneInfo('US/Central'))):
     try :
-        latitude = 45
-        longitude = -93
-
         sun = Sun(latitude, longitude)
 
         # today = datetime.datetime.now().date()
