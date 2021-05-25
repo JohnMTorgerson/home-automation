@@ -1,3 +1,4 @@
+import os
 from dotenv import load_dotenv
 from pprint import pprint
 import datetime
@@ -14,8 +15,8 @@ except:
 
 try:
     load_dotenv()
-    latitude = os.environ['LAT']
-    longitude = os.environ['LON']
+    latitude = float(os.environ['LAT'])
+    longitude = float(os.environ['LON'])
 except Exception as e:
     print(f"Error: could not load latitude and longitude from environment: {e}")
 
