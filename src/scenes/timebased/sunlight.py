@@ -13,17 +13,26 @@ except:
 # import wyze_sdk
 # wyze_sdk.set_file_logger(__name__, 'tmp/log.log')
 
+import logging
+# create logger
+logger = logging.getLogger(f"main.{__name__}")
+# logger = logging.getLogger(__name__)
+
 try:
     load_dotenv()
     latitude = float(os.environ['LAT'])
     longitude = float(os.environ['LON'])
 except Exception as e:
-    print(f"Error: could not load latitude and longitude from environment: {e}")
+    logger.error(f"Error: could not load latitude and longitude from environment: {e}")
 
 
 def run(client=None,bulbs=[],bulb_props={},now=None) :
+    logger.info('Running sunlight scene...')
+
     if client is None or isinstance(client,list) :
-        raise Exception('Must pass client object to sunlight.run()')
+        err = 'Must pass client object to sunlight.run()'
+        logger.critical(err)
+        raise Exception(err)
         # pass
 
     minutes_since = get_relative_time(now)
@@ -41,21 +50,21 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
             temp = get_temp(srt,sst)
             brightness = get_brightness(srt,sst)
         except Exception as e:
-            print(e)
+            logger.error(e)
 
-        print(f"sunrise: {int(srt)} sunset: {int(sst)} --- temp: {temp} brightness: {brightness}")
+        logger.info(f"sunrise: {int(srt)} sunset: {int(sst)} --- temp: {temp} brightness: {brightness}")
 
         for bulb in bulbs:
             try:
                 adjusted_temp = bulb_props.bulbs[bulb.nickname]["temp_adjust"](temp)
             except:
-                print(f"Could not find adjusted temp for {bulb.nickname}")
+                logger.warning(f"Could not find adjusted temp for {bulb.nickname}")
                 adjusted_temp = temp
 
             try:
                 adjusted_brightness = bulb_props.bulbs[bulb.nickname]["brightness_adjust"](brightness)
             except:
-                print(f"Could not find adjusted temp for {bulb.nickname}")
+                logger.warning(f"Could not find adjusted brightness for {bulb.nickname}")
                 adjusted_brightness = brightness
 
             client.bulbs.set_color_temp(device_mac=bulb.mac, device_model=bulb.product.model, color_temp=adjusted_temp)
@@ -64,7 +73,7 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
 
 
     else:
-        print("Could not get sunrise/sunset times")
+        logger.error("Could not get sunrise/sunset times")
 
 
     # for n in range(int(1621054800/60/30),int(1621141200/60/30)):
@@ -74,12 +83,12 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
 
 def get_brightness(srt,sst) :
     args = {
-        'low': 50,
+        'low': 40,
         'high': 120, # the maximum is 100, but we can make this higher as long as ceiling <= 100
-        'floor': 0,
+        'floor': 50,
         'ceiling': 100,
-        'steepness': 1/15, # unitless constant to adjust the steepness of the curve
-        'offset': 60, # positive offset makes changes happen later (in minutes). If 0, the steepest part of the curve will be right at sunrise/sunset
+        'steepness': 1/60, # unitless constant to adjust the steepness of the curve
+        'offset': 90, # positive offset makes changes happen later (in minutes). If 0, the steepest part of the curve will be right at sunrise/sunset
     }
 
     b = 100 # just a default in case all the conditionals fail for some reason
@@ -132,7 +141,7 @@ def get_temp(srt,sst) :
 
     # MIDNIGHT TO SUNRISE
     if srt < 0:
-        print("MIDNIGHT TO SUNRISE")
+        logger.info("MIDNIGHT TO SUNRISE")
         # temp = values_curve(time=srt,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='ascending',floor=floor,ceiling=ceiling)
         args['time'] = srt
         args['direction'] = 'ascending'
@@ -140,7 +149,7 @@ def get_temp(srt,sst) :
 
     # SUNRISE TO MIDDAY
     elif srt >= 0 and sst < 0 and abs(srt) < abs(sst):
-        print("SUNRISE TO MIDDAY")
+        logger.info("SUNRISE TO MIDDAY")
         # temp = values_curve(time=srt,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='ascending',floor=floor,ceiling=ceiling)
         args['time'] = srt
         args['direction'] = 'ascending'
@@ -148,14 +157,14 @@ def get_temp(srt,sst) :
 
     # MIDDAY to SUNSET
     elif srt > 0 and sst < 0 and abs(srt) >= abs(sst):
-        print("MIDDAY to SUNSET")
+        logger.info("MIDDAY to SUNSET")
         # temp = values_curve(time=sst,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='descending',floor=floor,ceiling=ceiling)
         args['time'] = sst
         args['direction'] = 'descending'
         temp = values_curve(args)
     # SUNSET TO MIDNIGHT
     elif srt > 0 and sst >= 0:
-        print("SUNSET TO MIDNIGHT")
+        logger.info("SUNSET TO MIDNIGHT")
         # temp = values_curve(time=sst,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='descending',floor=floor,ceiling=ceiling)
         args['time'] = sst
         args['direction'] = 'descending'
@@ -219,7 +228,7 @@ def get_relative_time(now=datetime.datetime.now(tz=ZoneInfo('US/Central'))):
 
         # today = datetime.datetime.now().date()
         # now = datetime.datetime(2011, 10, 26, 18, 0, 0)
-        print(f"Now: {now}")
+        logger.debug(f"Now: {now}")
 
         sunrise = sun.get_local_sunrise_time(now)#.replace(tzinfo=ZoneInfo('US/Central'))
         # print(f"Sunrise: {sunrise}")
@@ -245,7 +254,7 @@ def get_relative_time(now=datetime.datetime.now(tz=ZoneInfo('US/Central'))):
         }
 
     except SunTimeException as e:
-        print(f"Problem getting sunrise/sunset times: {e}")
+        logger.error(f"Problem getting sunrise/sunset times: {e}")
     else:
         return time_since
 
