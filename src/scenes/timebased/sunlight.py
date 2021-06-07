@@ -67,8 +67,25 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
                 logger.warning(f"Could not find adjusted brightness for {bulb.nickname}")
                 adjusted_brightness = brightness
 
-            client.bulbs.set_color_temp(device_mac=bulb.mac, device_model=bulb.product.model, color_temp=adjusted_temp)
-            client.bulbs.set_brightness(device_mac=bulb.mac, device_model=bulb.product.model, brightness=adjusted_brightness)
+            try:
+                on = bulb_props.bulbs[bulb.nickname]["on_adjust"](adjusted_brightness)
+            except:
+                logger.debug(f"Could not find on_adjust from bulb_props for {bulb.nickname}, so leaving on")
+                on = True
+
+            logger.debug(f"{bulb.nickname}: temp={adjusted_temp}, brightness={adjusted_brightness}, on={on}")
+
+            is_on = client.bulbs.info(device_mac=bulb.mac).is_on
+
+            if on is True:
+                # logger.debug('on is True')
+                # client.bulbs.turn_on(device_mac=bulb.mac, device_model=bulb.product.model)
+                client.bulbs.set_color_temp(device_mac=bulb.mac, device_model=bulb.product.model, color_temp=adjusted_temp)
+                client.bulbs.set_brightness(device_mac=bulb.mac, device_model=bulb.product.model, brightness=adjusted_brightness)
+            elif on is False and is_on:
+                # logger.debug('on is False and bulb.is_on')
+                client.bulbs.turn_off(device_mac=bulb.mac, device_model=bulb.product.model)
+
 
 
 
@@ -99,16 +116,19 @@ def get_brightness(srt,sst) :
         args['time'] = srt
         args['direction'] = 'ascending'
         b = values_curve(args)
+
     # SUNRISE TO MIDDAY
     elif srt >= 0 and sst < 0 and abs(srt) < abs(sst):
         # print("SUNRISE TO MIDDAY")
         b = 100
+
     # MIDDAY to SUNSET
     elif srt > 0 and sst < 0 and abs(srt) >= abs(sst):
         # print("MIDDAY to SUNSET")
         args['time'] = sst
         args['direction'] = 'descending'
         b = values_curve(args)
+
     # SUNSET TO MIDNIGHT
     elif srt > 0 and sst >= 0:
         # print("SUNSET TO MIDNIGHT")
@@ -162,6 +182,7 @@ def get_temp(srt,sst) :
         args['time'] = sst
         args['direction'] = 'descending'
         temp = values_curve(args)
+
     # SUNSET TO MIDNIGHT
     elif srt > 0 and sst >= 0:
         logger.info("SUNSET TO MIDNIGHT")

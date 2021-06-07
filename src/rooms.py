@@ -3,5 +3,6 @@ living_room = [
     "Floor Lamp",
     "Wood Lamp",
     "Left Window",
-    "Right Window"
+    "Right Window",
+    "Ceiling NE"
 ]
