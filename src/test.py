@@ -41,7 +41,7 @@ def test_bulb(mac) :
       print(f"color: {bulb.color}")
 
       # client.bulbs.set_brightness(device_mac=bulb.mac, device_model=bulb.product.model, brightness=100)
-      # client.bulbs.set_color(device_mac=bulb.mac, device_model=bulb.product.model, color='ff0000')
+      client.bulbs.set_color(device_mac=bulb.mac, device_model=bulb.product.model, color='ff0000')
       # client.bulbs.set_color_temp(device_mac=bulb.mac, device_model=bulb.product.model, color_temp=5600)
 
       # bulb = client.bulbs.info(device_mac=mac)

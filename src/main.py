@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+load_dotenv()
 from pprint import pprint
 import datetime
 try:
@@ -15,12 +16,12 @@ logger = logging.getLogger('main')
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(name)s : %(message)s')
 # log to file at INFO level
-file_handler = logging.FileHandler('../logs/log.log')
+file_handler = logging.FileHandler(os.path.abspath(f"{os.environ['LOG_PATH']}/log.log"))
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 # log to another file at ERROR level
-error_file_handler = logging.FileHandler('../logs/error.log')
+error_file_handler = logging.FileHandler(os.path.abspath(f"{os.environ['LOG_PATH']}/error.log"))
 error_file_handler.setLevel(logging.ERROR)
 error_file_handler.setFormatter(formatter)
 logger.addHandler(error_file_handler)
@@ -40,8 +41,6 @@ from wyze_sdk.errors import WyzeApiError
 
 # import wyze_sdk
 # wyze_sdk.set_file_logger(__name__, 'tmp/log.log')
-
-load_dotenv()
 
 try:
     client = Client(email=os.environ['WYZE_EMAIL'], password=os.environ['WYZE_PASSWORD'])

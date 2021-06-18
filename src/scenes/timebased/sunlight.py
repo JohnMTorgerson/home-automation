@@ -62,7 +62,7 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
                 adjusted_temp = temp
 
             try:
-                adjusted_brightness = bulb_props.bulbs[bulb.nickname]["brightness_adjust"](brightness)
+                adjusted_brightness = bulb_props.bulbs[bulb.nickname]["brightness_adjust"](brightness,adjusted_temp)
             except:
                 logger.warning(f"Could not find adjusted brightness for {bulb.nickname}")
                 adjusted_brightness = brightness
@@ -75,7 +75,11 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
 
             logger.debug(f"{bulb.nickname}: temp={adjusted_temp}, brightness={adjusted_brightness}, on={on}")
 
-            is_on = client.bulbs.info(device_mac=bulb.mac).is_on
+            try:
+                is_on = client.bulbs.info(device_mac=bulb.mac).is_on
+            except:
+                logger.warning(f"Could not find on/off state for {bulb.nickname}")
+                is_on = False
 
             if on is True:
                 # logger.debug('on is True')
@@ -105,7 +109,7 @@ def get_brightness(srt,sst) :
         'floor': 50,
         'ceiling': 100,
         'steepness': 1/60, # unitless constant to adjust the steepness of the curve
-        'offset': 90, # positive offset makes changes happen later (in minutes). If 0, the steepest part of the curve will be right at sunrise/sunset
+        'offset': 45, # positive offset makes changes happen later (in minutes). If 0, the steepest part of the curve will be right at sunrise/sunset
     }
 
     b = 100 # just a default in case all the conditionals fail for some reason
@@ -149,8 +153,8 @@ def get_temp(srt,sst) :
         'high': coldest, # 6500 is the maximum possible value for mesh bulbs
         'floor': warmest + 100,
         'ceiling': coldest - 100,
-        'steepness': 1/15, # unitless constant to adjust the steepness of the curve
-        'offset': -5 # positive offset makes changes happen later (in minutes). If 0, the steepest part of the curve will be right at sunrise/sunset
+        'steepness': 1/20, # unitless constant to adjust the steepness of the curve
+        'offset': -20 # positive offset makes changes happen later (in minutes). If 0, the steepest part of the curve will be right at sunrise/sunset
     }
 
     temp = 2700 # just a default in case all the conditionals fail for some reason
