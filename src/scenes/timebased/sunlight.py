@@ -41,32 +41,52 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
 
         srt = minutes_since['sunrise']
         sst = minutes_since['sunset']
+        # nearest_event_time = srt if abs(srt) < abs(sst) else sst
 
         # defaults in case of error
         temp = 2700
         brightness = 100
 
+        # These baseline values are only calculated for logging purposes;
+        # we calculate the actual values used per bulb in the for loop below;
+        # (there may be per-bulb adjustments for time, and then also for temp and brightness in addition)
         try :
-            temp = get_temp(srt,sst)
-            brightness = get_brightness(srt,sst)
+            temp_baseline = get_temp(srt,sst)
+            brightness_baseline = get_brightness(srt,sst)
         except Exception as e:
             logger.error(e)
-
-        logger.info(f"sunrise: {int(srt)} sunset: {int(sst)} --- temp: {temp} brightness: {brightness}")
+        logger.info(f"sunrise: {int(srt)} sunset: {int(sst)} --- temp_baseline: {temp_baseline} brightness_baseline: {brightness_baseline}")
 
         for bulb in bulbs:
+
+            # GET TIME ADJUSTMENT PER BULB (IF GIVEN), TO APPLY TO ALL SUBSEQUENT PER-BULB ADJUSTMENTS (IF GIVEN)
+            try:
+                adjusted_srt = bulb_props.bulbs[bulb.nickname]['srt_adjust'](srt)
+            except:
+                adjusted_srt = srt
+            try:
+                adjusted_sst = bulb_props.bulbs[bulb.nickname]['sst_adjust'](sst)
+            except:
+                adjusted_sst = sst
+
+            temp = get_temp(adjusted_srt,adjusted_sst)
+            brightness = get_brightness(adjusted_srt,adjusted_sst)
+
+            # GET ADJUSTED TEMP
             try:
                 adjusted_temp = bulb_props.bulbs[bulb.nickname]["temp_adjust"](temp)
             except:
                 logger.warning(f"Could not find adjusted temp for {bulb.nickname}")
                 adjusted_temp = temp
 
+            # GET ADJUSTED BRIGHTNESS
             try:
                 adjusted_brightness = bulb_props.bulbs[bulb.nickname]["brightness_adjust"](brightness,adjusted_temp)
             except:
                 logger.warning(f"Could not find adjusted brightness for {bulb.nickname}")
                 adjusted_brightness = brightness
 
+            # GET ON/OFF ADJUSTMENT
             try:
                 on = bulb_props.bulbs[bulb.nickname]["on_adjust"](adjusted_brightness)
             except:
@@ -75,12 +95,14 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
 
             logger.debug(f"{bulb.nickname}: temp={adjusted_temp}, brightness={adjusted_brightness}, on={on}")
 
+            # SEE IF BULB IS ACTUALLY ON OR OFF ALREADY
             try:
                 is_on = client.bulbs.info(device_mac=bulb.mac).is_on
             except:
                 logger.warning(f"Could not find on/off state for {bulb.nickname}")
                 is_on = False
 
+            # SET ALL THE VALUES WE JUST GOT
             if on is True:
                 # logger.debug('on is True')
                 # client.bulbs.turn_on(device_mac=bulb.mac, device_model=bulb.product.model)
