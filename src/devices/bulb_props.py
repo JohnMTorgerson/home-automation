@@ -31,21 +31,21 @@ bulbs = {
     },
     "Ceiling NE":{
         "room":"Living Room",
-        "sst_adjust": lambda sst : sst + 30,
+        "sst_adjust": lambda sst : sst + 60,
         "brightness_adjust": lambda b,t : int(max_b * pow(b / max_b,2) * min(pow(t/5000,1),1)),
         "temp_adjust": lambda t : max(t - 200,min_temp),
         "on_adjust": lambda b : False if b < 10 else True
     },
     "Ceiling NW":{
         "room":"Living Room",
-        "sst_adjust": lambda sst : sst + 30,
+        "sst_adjust": lambda sst : sst + 60,
         "brightness_adjust": lambda b,t : int(max_b * pow(b / max_b,2) * min(pow(t/5300,1.5),1)),
         "temp_adjust": lambda t : max(t - 200,min_temp),
         "on_adjust": lambda b : False if b < 10 else True
     },
     "Ceiling S":{
         "room":"Living Room",
-        "sst_adjust": lambda sst : sst + 30,
+        "sst_adjust": lambda sst : sst + 60,
         "brightness_adjust": lambda b,t : int(max_b * pow(b / max_b,2) * min(pow(t/5300,1.5),1)),
         "temp_adjust": lambda t : max(t - 200,min_temp),
         "on_adjust": lambda b : False if b < 10 else True

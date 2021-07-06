@@ -55,7 +55,7 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
             brightness_baseline = get_brightness(srt,sst)
         except Exception as e:
             logger.error(e)
-        logger.info(f"sunrise: {int(srt)} sunset: {int(sst)} --- temp_baseline: {temp_baseline} brightness_baseline: {brightness_baseline}")
+        logger.info(f"BASELINE VALUES ==== sunrise: {int(srt)}, sunset: {int(sst)}, temp: {temp_baseline}, brightness: {brightness_baseline}")
 
         for bulb in bulbs:
 
@@ -88,12 +88,12 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
 
             # GET ON/OFF ADJUSTMENT
             try:
-                on = bulb_props.bulbs[bulb.nickname]["on_adjust"](adjusted_brightness)
+                turn_on = bulb_props.bulbs[bulb.nickname]["on_adjust"](adjusted_brightness)
             except:
                 logger.debug(f"Could not find on_adjust from bulb_props for {bulb.nickname}, so leaving on")
-                on = True
+                turn_on = True
 
-            logger.debug(f"{bulb.nickname}: temp={adjusted_temp}, brightness={adjusted_brightness}, on={on}")
+            # logger.debug(f"{bulb.nickname}: temp={adjusted_temp}, brightness={adjusted_brightness}, on={turn_on}")
 
             # SEE IF BULB IS ACTUALLY ON OR OFF ALREADY
             try:
@@ -103,16 +103,19 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
                 is_on = False
 
             # SET ALL THE VALUES WE JUST GOT
-            if on is True:
+            if turn_on is True:
+                # if turn_on is true, any adjustments we make will turn the bulb on if it's off,
+                # so all we need to do is make the adjustments
                 # logger.debug('on is True')
                 # client.bulbs.turn_on(device_mac=bulb.mac, device_model=bulb.product.model)
                 client.bulbs.set_color_temp(device_mac=bulb.mac, device_model=bulb.product.model, color_temp=adjusted_temp)
                 client.bulbs.set_brightness(device_mac=bulb.mac, device_model=bulb.product.model, brightness=adjusted_brightness)
-            elif on is False and is_on:
+            elif turn_on is False and is_on:
+                # if turn_on is false and the bulb is actually on, then we need to manually turn it off
                 # logger.debug('on is False and bulb.is_on')
                 client.bulbs.turn_off(device_mac=bulb.mac, device_model=bulb.product.model)
 
-
+            logger.info(f"{bulb.nickname} (adjusted values) --- sunrise: {int(adjusted_srt)}, sunset: {int(adjusted_sst)}, temp: {adjusted_temp}, brightness: {adjusted_brightness}, turn_on={turn_on}, is_on={is_on}")
 
 
     else:
@@ -187,7 +190,7 @@ def get_temp(srt,sst) :
 
     # MIDNIGHT TO SUNRISE
     if srt < 0:
-        logger.info("MIDNIGHT TO SUNRISE")
+        logger.debug("MIDNIGHT TO SUNRISE")
         # temp = values_curve(time=srt,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='ascending',floor=floor,ceiling=ceiling)
         args['time'] = srt
         args['direction'] = 'ascending'
@@ -195,7 +198,7 @@ def get_temp(srt,sst) :
 
     # SUNRISE TO MIDDAY
     elif srt >= 0 and sst < 0 and abs(srt) < abs(sst):
-        logger.info("SUNRISE TO MIDDAY")
+        logger.debug("SUNRISE TO MIDDAY")
         # temp = values_curve(time=srt,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='ascending',floor=floor,ceiling=ceiling)
         args['time'] = srt
         args['direction'] = 'ascending'
@@ -203,7 +206,7 @@ def get_temp(srt,sst) :
 
     # MIDDAY to SUNSET
     elif srt > 0 and sst < 0 and abs(srt) >= abs(sst):
-        logger.info("MIDDAY to SUNSET")
+        logger.debug("MIDDAY to SUNSET")
         # temp = values_curve(time=sst,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='descending',floor=floor,ceiling=ceiling)
         args['time'] = sst
         args['direction'] = 'descending'
@@ -211,7 +214,7 @@ def get_temp(srt,sst) :
 
     # SUNSET TO MIDNIGHT
     elif srt > 0 and sst >= 0:
-        logger.info("SUNSET TO MIDNIGHT")
+        logger.debug("SUNSET TO MIDNIGHT")
         # temp = values_curve(time=sst,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='descending',floor=floor,ceiling=ceiling)
         args['time'] = sst
         args['direction'] = 'descending'
