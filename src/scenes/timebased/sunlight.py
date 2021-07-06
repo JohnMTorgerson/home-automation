@@ -47,6 +47,8 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
         temp = 2700
         brightness = 100
 
+
+        # ======================= CRAP FOR LOGGING ONLY =============================
         # These baseline values are only calculated for logging purposes;
         # we calculate the actual values used per bulb in the for loop below;
         # (there may be per-bulb adjustments for time, and then also for temp and brightness in addition)
@@ -56,6 +58,15 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
         except Exception as e:
             logger.error(e)
         logger.info(f"BASELINE VALUES ==== sunrise: {int(srt)}, sunset: {int(sst)}, temp: {temp_baseline}, brightness: {brightness_baseline}")
+
+        # just to prettify the logging
+        max_name_length = 0
+        for bulb in bulbs :
+            name_length = len(bulb.nickname)
+            if name_length > max_name_length :
+                max_name_length = name_length
+
+        # ^^===================== /CRAP FOR LOGGING ONLY ===========================^^
 
         for bulb in bulbs:
 
@@ -115,7 +126,10 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
                 # logger.debug('on is False and bulb.is_on')
                 client.bulbs.turn_off(device_mac=bulb.mac, device_model=bulb.product.model)
 
-            logger.info(f"{bulb.nickname} (adjusted values) --- sunrise: {int(adjusted_srt)}, sunset: {int(adjusted_sst)}, temp: {adjusted_temp}, brightness: {adjusted_brightness}, turn_on={turn_on}, is_on={is_on}")
+            num_spaces = max_name_length - len(bulb.nickname)
+            spaces = " " * num_spaces
+
+            logger.info(f"{bulb.nickname}{spaces} (adjusted values) --- sunrise: {int(adjusted_srt)}, sunset: {int(adjusted_sst)}, temp: {adjusted_temp}, brightness: {adjusted_brightness}, turn_on={turn_on}, is_on={is_on}")
 
 
     else:
