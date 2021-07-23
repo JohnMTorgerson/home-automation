@@ -6,3 +6,5 @@ wyze_sdk_fork/
 logs/
 *.gcx
 run.sh
+requirements.txt
+src/requirements.txt
