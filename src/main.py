@@ -59,7 +59,11 @@ def main() :
     lr_bulbs = []
     try:
         bulbs = get_devices.get_by_type(client,'MeshLight')
-        lr_bulbs = list(filter(lambda b : bulb_props.bulbs[b.nickname]["room"] == "Living Room",bulbs))
+        # lr_bulbs = list(filter(lambda b : bulb_props.bulbs[b.nickname]["room"] == "Living Room",bulbs))
+        for bulb in bulbs :
+            b_prop = bulb_props.bulbs.get(bulb.nickname) # safe if there is no bulb of that nickname
+            if b_prop and b_prop["room"] == "Living Room" :
+                lr_bulbs.append(bulb)
     except WyzeApiError as e:
         logger.error(f"WyzeApiError retrieving bulbs: {e}")
     except Exception as e:
