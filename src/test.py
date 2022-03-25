@@ -14,7 +14,13 @@ load_dotenv()
 client = Client(email=os.environ['WYZE_EMAIL'], password=os.environ['WYZE_PASSWORD'])
 
 def main() :
-    get_devices()
+    # get_devices()
+    test_graphics()
+
+def test_graphics() :
+    from scenes.timebased.sunlight import sunlight_graphics as sg
+    sg.open()
+
 
 def get_devices() :
     try:
@@ -44,8 +50,8 @@ def test_bulb(mac) :
       print(f"temp: {bulb.color_temp}")
       print(f"color: {bulb.color}")
 
-      # client.bulbs.set_brightness(device_mac=bulb.mac, device_model=bulb.product.model, brightness=100)
-      # client.bulbs.set_color(device_mac=bulb.mac, device_model=bulb.product.model, color='ff0000')
+      client.bulbs.set_brightness(device_mac=bulb.mac, device_model=bulb.product.model, brightness=30)
+      client.bulbs.set_color(device_mac=bulb.mac, device_model=bulb.product.model, color='0000ff')
       # client.bulbs.set_color_temp(device_mac=bulb.mac, device_model=bulb.product.model, color_temp=5600)
 
       # bulb = client.bulbs.info(device_mac=mac)

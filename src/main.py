@@ -49,7 +49,7 @@ except Exception as e:
     raise e
 
 ##### SCENES #####
-from scenes.timebased import sunlight
+from scenes.timebased.sunlight import sunlight
 
 def main() :
     logger.info('=================================================================')

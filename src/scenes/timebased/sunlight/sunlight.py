@@ -53,8 +53,8 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
         # we calculate the actual values used per bulb in the for loop below;
         # (there may be per-bulb adjustments for time, and then also for temp and brightness in addition)
         try :
-            temp_baseline = get_temp(srt,sst)
-            brightness_baseline = get_brightness(srt,sst)
+            temp_baseline = round(get_temp(srt,sst),2)
+            brightness_baseline = round(get_brightness(srt,sst),2)
         except Exception as e:
             logger.error(e)
         logger.info(f"BASELINE VALUES ==== sunrise: {int(srt)}, sunset: {int(sst)}, temp: {temp_baseline}, brightness: {brightness_baseline}")
@@ -103,6 +103,10 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
             except:
                 logger.debug(f"Could not find on_adjust from bulb_props for {bulb.nickname}, so leaving on")
                 turn_on = True
+
+            # round the values to nearest integer before sending to API
+            adjusted_temp = round(adjusted_temp)
+            adjusted_brightness = round(adjusted_brightness)
 
             # logger.debug(f"{bulb.nickname}: temp={adjusted_temp}, brightness={adjusted_brightness}, on={turn_on}")
 
@@ -284,33 +288,35 @@ def values_curve(args):
         raise ValueError("Error: direction must be either 'ascending' or 'descending'")
 
     direction = 1 if args['direction'] == 'descending' else -1
-    return int(min(args['ceiling'],max(args['floor'],direction * range * math.atan((args['offset'] - args['time']) * args['steepness'])/math.pi + args['low'] + range/2)))
+    
+    return min(args['ceiling'],max(args['floor'],direction * range * math.atan((args['offset'] - args['time']) * args['steepness'])/math.pi + args['low'] + range/2))
 
 def get_relative_time(now=datetime.datetime.now(tz=ZoneInfo('US/Central'))):
     try :
         sun = Sun(latitude, longitude)
 
-        # today = datetime.datetime.now().date()
-        # now = datetime.datetime(2011, 10, 26, 18, 0, 0)
+        # now = datetime.datetime(2022, 3, 14, 20, 15, 0)
+        # now = now + datetime.timedelta(1)
+        today = now.date() # just used for debugging/logging
         logger.debug(f"Now: {now}")
 
         sunrise = sun.get_local_sunrise_time(now)#.replace(tzinfo=ZoneInfo('US/Central'))
-        # print(f"Sunrise: {sunrise}")
+        logger.debug(f"Sunrise: {sunrise}")
         # sunset = sun.get_local_sunset_time(now).replace(tzinfo=pytz.utc).astimezone(pytz.timezone('America/Chicago'))
         # sunset = sun.get_local_sunset_time(now).replace(tzinfo=datetime.timezone.utc).astimezone(ZoneInfo('US/Central'))
         sunset = sun.get_local_sunset_time(now)
         # bug workaround:
         if sunset < sunrise:
             sunset = sunset + datetime.timedelta(1)
-        # print(f"Sunset: {sunset}")
-        # print('On {} the sun rose at {} and set at {}.'.
-        #       format(today, sunrise.strftime('%H:%M'), sunset.strftime('%H:%M')))
+        logger.debug(f"Sunset: {sunset}")
+        logger.debug('On {} the sun rose at {} and set at {}.'.
+              format(today, sunrise.strftime('%H:%M'), sunset.strftime('%H:%M')))
 
         # delta = datetime.timedelta(hours=1)
         sr_delta = (now.timestamp() - sunrise.timestamp()) / 60 # number of minutes since sunrise
         ss_delta = (now.timestamp() - sunset.timestamp()) / 60 # number of minutes since sunset
-        # print(f"Sunrise was {int(sr_delta / 6) / 10} hours ago")
-        # print(f"Sunset was {int(ss_delta / 6) / 10} hours ago")
+        logger.debug(f"Sunrise was {int(sr_delta / 6) / 10} hours ago")
+        logger.debug(f"Sunset was {int(ss_delta / 6) / 10} hours ago")
 
         time_since = {
             "sunrise": sr_delta,

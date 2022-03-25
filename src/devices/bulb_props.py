@@ -33,25 +33,25 @@ bulbs = {
         "room":"Living Room",
         "sst_adjust": lambda sst : sst + 60, # to warm and dim earlier
         "srt_adjust": lambda srt : srt - 60, # to bright and cool later
-        "brightness_adjust": lambda b,t : int(max_b * pow(b / max_b,2) * min(pow(t/5000,1),1)),
+        "brightness_adjust": lambda b,t : round(max_b * pow(b / max_b,2) * min(pow(t/5000,1),1)),
         "temp_adjust": lambda t : max(t - 200,min_temp),
-        "on_adjust": lambda b : False if b < 10 else True
+        "on_adjust": lambda b : False if b < 8 else True
     },
     "Ceiling NW":{
         "room":"Living Room",
         "sst_adjust": lambda sst : sst + 60, # to warm and dim earlier
         "srt_adjust": lambda srt : srt - 60, # to bright and cool later
-        "brightness_adjust": lambda b,t : int(max_b * pow(b / max_b,2) * min(pow(t/5300,1.5),1)),
+        "brightness_adjust": lambda b,t : round(max_b * pow(b / max_b,2) * min(pow(t/5300,1.5),1)),
         "temp_adjust": lambda t : max(t - 200,min_temp),
-        "on_adjust": lambda b : False if b < 10 else True
+        "on_adjust": lambda b : False if b < 8 else True
     },
     "Ceiling S":{
         "room":"Living Room",
         "sst_adjust": lambda sst : sst + 60, # to warm and dim earlier
         "srt_adjust": lambda srt : srt - 60, # to bright and cool later
-        "brightness_adjust": lambda b,t : int(max_b * pow(b / max_b,2) * min(pow(t/5300,1.5),1)),
+        "brightness_adjust": lambda b,t : round(max_b * pow(b / max_b,2) * min(pow(t/5300,1.5),1)),
         "temp_adjust": lambda t : max(t - 200,min_temp),
-        "on_adjust": lambda b : False if b < 10 else True
+        "on_adjust": lambda b : False if b < 8 else True
     },
 
     "Bathroom L":{
