@@ -50,6 +50,7 @@ except Exception as e:
 
 ##### SCENES #####
 from scenes.timebased import sunlight
+from scenes.timebased import wakeup
 
 def main() :
     logger.info('=================================================================')
@@ -57,13 +58,20 @@ def main() :
     # get devices
     bulbs = []
     lr_bulbs = []
+    br_bulbs = []
     try:
         bulbs = get_devices.get_by_type(client,'MeshLight')
         # lr_bulbs = list(filter(lambda b : bulb_props.bulbs[b.nickname]["room"] == "Living Room",bulbs))
         for bulb in bulbs :
             b_prop = bulb_props.bulbs.get(bulb.nickname) # safe if there is no bulb of that nickname
-            if b_prop and b_prop["room"] == "Living Room" :
-                lr_bulbs.append(bulb)
+
+            if b_prop :
+                # living room bulbs
+                if b_prop["room"] == "Living Room" :
+                    lr_bulbs.append(bulb)
+                # bedroom bulbs
+                if b_prop["room"] == "Bedroom" :
+                    br_bulbs.append(bulb)
     except WyzeApiError as e:
         logger.error(f"WyzeApiError retrieving bulbs: {e}")
     except Exception as e:
@@ -71,7 +79,7 @@ def main() :
 
     # run scenes on specified devices
     sunlight.run(client=client,bulbs=lr_bulbs,bulb_props=bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # adjust the temperature according to daylight
-
+    wakeup.run(client=client,bulbs=br_bulbs,bulb_props=bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # turn on and gradually brighten the bedroom bulbs according to when my alarm is set
 
 if __name__ == "__main__" :
     main()

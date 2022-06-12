@@ -56,6 +56,10 @@ bulbs = {
 
     "Bathroom L":{
         "room":"Bathroom"
+    },
+
+    "Bedside":{
+        "room":"Bedroom"
     }
 
 }
