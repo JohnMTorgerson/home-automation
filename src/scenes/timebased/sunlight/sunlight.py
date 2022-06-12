@@ -29,7 +29,7 @@ except Exception as e:
 def run(client=None,bulbs=[],bulb_props={},now=None) :
     logger.info('Running sunlight scene...')
 
-    if client is None or isinstance(client,list) :
+    if len(bulbs) > 0 and client is None or isinstance(client,list) :
         err = 'Must pass client object to sunlight.run()'
         logger.critical(err)
         raise Exception(err)
@@ -57,6 +57,7 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
             brightness_baseline = round(get_brightness(srt,sst),2)
         except Exception as e:
             logger.error(e)
+            raise e
         logger.info(f"BASELINE VALUES ==== sunrise: {int(srt)}, sunset: {int(sst)}, temp: {temp_baseline}, brightness: {brightness_baseline}")
 
         # just to prettify the logging
@@ -144,6 +145,11 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
     #     time = datetime.datetime.fromtimestamp(n*30*60)
     #     times = get_relative_time(time)
     #     get_temp(times['sunrise'],times['sunset'])
+
+    # the return value is not used for anything during the normal running of the script;
+    # but it is used for creating json data of the whole values curve, which is referenced by the automation GUI
+    return [temp_baseline,brightness_baseline]
+
 
 def get_brightness(srt,sst) :
     args = {
@@ -288,7 +294,7 @@ def values_curve(args):
         raise ValueError("Error: direction must be either 'ascending' or 'descending'")
 
     direction = 1 if args['direction'] == 'descending' else -1
-    
+
     return min(args['ceiling'],max(args['floor'],direction * range * math.atan((args['offset'] - args['time']) * args['steepness'])/math.pi + args['low'] + range/2))
 
 def get_relative_time(now=datetime.datetime.now(tz=ZoneInfo('US/Central'))):
