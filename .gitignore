@@ -8,3 +8,4 @@ logs/
 run.sh
 requirements.txt
 src/requirements.txt
+src/data.json

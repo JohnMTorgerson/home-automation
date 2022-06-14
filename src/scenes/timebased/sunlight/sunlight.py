@@ -324,15 +324,17 @@ def get_relative_time(now=datetime.datetime.now(tz=ZoneInfo('US/Central'))):
         logger.debug(f"Sunrise was {int(sr_delta / 6) / 10} hours ago")
         logger.debug(f"Sunset was {int(ss_delta / 6) / 10} hours ago")
 
-        time_since = {
+        data = {
             "sunrise": sr_delta,
-            "sunset": ss_delta
+            "sunset": ss_delta,
+            "sunrise_abs": sunrise,
+            "sunset_abs": sunset
         }
 
     except SunTimeException as e:
         logger.error(f"Problem getting sunrise/sunset times: {e}")
     else:
-        return time_since
+        return data
 
 if __name__ == "__main__" :
     run()

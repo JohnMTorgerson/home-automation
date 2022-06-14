@@ -9,6 +9,12 @@ try:
 except:
     from backports.zoneinfo import ZoneInfo
 
+from scenes.timebased.sunlight import sunlight
+
+
+now = datetime.datetime.now(tz=ZoneInfo('US/Central'))# + datetime.timedelta(days=183)
+midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
 # # use the following when testing wyze_sdk from local fork
 # import sys
 # # insert at 1, 0 is the script path (or '' in REPL)
@@ -21,16 +27,24 @@ except:
 # client = Client(email=os.environ['WYZE_EMAIL'], password=os.environ['WYZE_PASSWORD'])
 
 def main() :
+    current_values = sunlight.run(client=None,bulbs=[],bulb_props={},now=now)
+
     data = {
-        "sunlight_values" : get_sunlight_values()
+        "scenes" : {
+            "sunlight" : {
+                "current_system_time" : now.timestamp(),
+                "current_temp" : current_values[0],
+                "current_brightness" : current_values[1],
+                "sunlight_curve" : get_sunlight_values(),
+                "suntimes" : get_suntimes()
+            }
+         }
     }
 
     with open("data.json", "w") as f :
         json.dump(data, f)
 
 def get_sunlight_values() :
-    from scenes.timebased.sunlight import sunlight
-    midnight = datetime.datetime.now(tz=ZoneInfo('US/Central')).replace(hour=0, minute=0, second=0, microsecond=0)
     interval = 3 # in minutes
     delta = datetime.timedelta(minutes=interval)
     time = midnight
@@ -42,6 +56,13 @@ def get_sunlight_values() :
 
     # pprint(values)
     return values
+
+def get_suntimes() :
+    values = sunlight.get_relative_time(now)
+    sunrise = values["sunrise_abs"].timestamp() - midnight.timestamp()
+    sunset = values["sunset_abs"].timestamp() - midnight.timestamp()
+
+    return [sunrise, sunset]
 
 if __name__ == "__main__" :
     main()
