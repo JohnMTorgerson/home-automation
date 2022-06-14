@@ -49,8 +49,8 @@ except Exception as e:
     raise e
 
 ##### SCENES #####
-from scenes.timebased import sunlight
-from scenes.timebased import wakeup
+from scenes.timebased.sunlight import sunlight
+# from scenes.timebased import wakeup
 
 def main() :
     logger.info('=================================================================')
@@ -79,7 +79,7 @@ def main() :
 
     # run scenes on specified devices
     sunlight.run(client=client,bulbs=lr_bulbs,bulb_props=bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # adjust the temperature according to daylight
-    wakeup.run(client=client,bulbs=br_bulbs,bulb_props=bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # turn on and gradually brighten the bedroom bulbs according to when my alarm is set
+    # wakeup.run(client=client,bulbs=br_bulbs,bulb_props=bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # turn on and gradually brighten the bedroom bulbs according to when my alarm is set
 
 if __name__ == "__main__" :
     main()
