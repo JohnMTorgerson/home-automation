@@ -26,7 +26,7 @@ midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
 # load_dotenv()
 # client = Client(email=os.environ['WYZE_EMAIL'], password=os.environ['WYZE_PASSWORD'])
 
-def main() :
+def update() :
     current_values = sunlight.run(client=None,bulbs=[],bulb_props={},now=now)
 
     data = {
@@ -65,4 +65,4 @@ def get_suntimes() :
     return [sunrise, sunset]
 
 if __name__ == "__main__" :
-    main()
+    update()

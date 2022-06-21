@@ -42,6 +42,10 @@ from wyze_sdk.errors import WyzeApiError
 # import wyze_sdk
 # wyze_sdk.set_file_logger(__name__, 'tmp/log.log')
 
+# updates json data dump for the automation-gui to read from
+import update_json
+update_json.update()
+
 try:
     client = Client(email=os.environ['WYZE_EMAIL'], password=os.environ['WYZE_PASSWORD'])
 except Exception as e:
