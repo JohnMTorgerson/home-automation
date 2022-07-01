@@ -15,23 +15,34 @@ except:
 
 import logging
 # create logger
-logger = logging.getLogger(f"main.{__name__}")
-# logger = logging.getLogger(__name__)
+sunlight_logger = logging.getLogger(f"main.{__name__}")
+# sunlight_logger = logging.getLogger(__name__)
 
 try:
     load_dotenv()
     latitude = float(os.environ['LAT'])
     longitude = float(os.environ['LON'])
 except Exception as e:
-    logger.error(f"Error: could not load latitude and longitude from environment: {e}")
+    sunlight_logger.error(f"Error: could not load latitude and longitude from environment: {e}")
 
 
-def run(client=None,bulbs=[],bulb_props={},now=None) :
-    logger.info('Running sunlight scene...')
+def run(client=None,bulbs=[],bulb_props={},now=None,log=True) :
+    # if log=False is passed, we don't want to do any logging, so set to a null handler
+    if log == False :
+        # set sunlight_logger to null handler
+        global sunlight_logger
+        sunlight_logger = logging.getLogger("null")
+    else :
+        # otherwise, we have to reset to the actual logger (in case False was passed previously)
+        # this is clearly not the best way to handle this, but it'll work for now
+        # probably this whole project needs to be re-written using classes
+        sunlight_logger = logging.getLogger(f"main.{__name__}")
+
+    sunlight_logger.info('Running sunlight scene...')
 
     if len(bulbs) > 0 and client is None or isinstance(client,list) :
         err = 'Must pass client object to sunlight.run()'
-        logger.critical(err)
+        sunlight_logger.critical(err)
         raise Exception(err)
         # pass
 
@@ -56,9 +67,9 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
             temp_baseline = round(get_temp(srt,sst),2)
             brightness_baseline = round(get_brightness(srt,sst),2)
         except Exception as e:
-            logger.error(e)
+            sunlight_logger.error(e)
             raise e
-        logger.info(f"BASELINE VALUES ==== sunrise: {int(srt)}, sunset: {int(sst)}, temp: {temp_baseline}, brightness: {brightness_baseline}")
+        sunlight_logger.info(f"BASELINE VALUES ==== sunrise: {int(srt)}, sunset: {int(sst)}, temp: {temp_baseline}, brightness: {brightness_baseline}")
 
         # just to prettify the logging
         max_name_length = 0
@@ -88,57 +99,57 @@ def run(client=None,bulbs=[],bulb_props={},now=None) :
             try:
                 adjusted_temp = bulb_props.bulbs[bulb.nickname]["temp_adjust"](temp)
             except:
-                logger.warning(f"Could not find adjusted temp for {bulb.nickname}")
+                sunlight_logger.warning(f"Could not find adjusted temp for {bulb.nickname}")
                 adjusted_temp = temp
 
             # GET ADJUSTED BRIGHTNESS
             try:
                 adjusted_brightness = bulb_props.bulbs[bulb.nickname]["brightness_adjust"](brightness,adjusted_temp)
             except:
-                logger.warning(f"Could not find adjusted brightness for {bulb.nickname}")
+                sunlight_logger.warning(f"Could not find adjusted brightness for {bulb.nickname}")
                 adjusted_brightness = brightness
 
             # GET ON/OFF ADJUSTMENT
             try:
                 turn_on = bulb_props.bulbs[bulb.nickname]["on_adjust"](adjusted_brightness)
             except:
-                logger.debug(f"Could not find on_adjust from bulb_props for {bulb.nickname}, so leaving on")
+                sunlight_logger.debug(f"Could not find on_adjust from bulb_props for {bulb.nickname}, so leaving on")
                 turn_on = True
 
             # round the values to nearest integer before sending to API
             adjusted_temp = round(adjusted_temp)
             adjusted_brightness = round(adjusted_brightness)
 
-            # logger.debug(f"{bulb.nickname}: temp={adjusted_temp}, brightness={adjusted_brightness}, on={turn_on}")
+            # sunlight_logger.debug(f"{bulb.nickname}: temp={adjusted_temp}, brightness={adjusted_brightness}, on={turn_on}")
 
             # SEE IF BULB IS ACTUALLY ON OR OFF ALREADY
             try:
                 is_on = client.bulbs.info(device_mac=bulb.mac).is_on
             except:
-                logger.warning(f"Could not find on/off state for {bulb.nickname}")
+                sunlight_logger.warning(f"Could not find on/off state for {bulb.nickname}")
                 is_on = False
 
             # SET ALL THE VALUES WE JUST GOT
             if turn_on is True:
                 # if turn_on is true, any adjustments we make will turn the bulb on if it's off,
                 # so all we need to do is make the adjustments
-                # logger.debug('on is True')
+                # sunlight_logger.debug('on is True')
                 # client.bulbs.turn_on(device_mac=bulb.mac, device_model=bulb.product.model)
                 client.bulbs.set_color_temp(device_mac=bulb.mac, device_model=bulb.product.model, color_temp=adjusted_temp)
                 client.bulbs.set_brightness(device_mac=bulb.mac, device_model=bulb.product.model, brightness=adjusted_brightness)
             elif turn_on is False and is_on:
                 # if turn_on is false and the bulb is actually on, then we need to manually turn it off
-                # logger.debug('on is False and bulb.is_on')
+                # sunlight_logger.debug('on is False and bulb.is_on')
                 client.bulbs.turn_off(device_mac=bulb.mac, device_model=bulb.product.model)
 
             num_spaces = max_name_length - len(bulb.nickname)
             spaces = " " * num_spaces
 
-            logger.info(f"{bulb.nickname}{spaces} (adjusted values) --- sunrise: {int(adjusted_srt)}, sunset: {int(adjusted_sst)}, temp: {adjusted_temp}, brightness: {adjusted_brightness}, turn_on={turn_on}, is_on={is_on}")
+            sunlight_logger.info(f"{bulb.nickname}{spaces} (adjusted values) --- sunrise: {int(adjusted_srt)}, sunset: {int(adjusted_sst)}, temp: {adjusted_temp}, brightness: {adjusted_brightness}, turn_on={turn_on}, is_on={is_on}")
 
 
     else:
-        logger.error("Could not get sunrise/sunset times")
+        sunlight_logger.error("Could not get sunrise/sunset times")
 
 
     # for n in range(int(1621054800/60/30),int(1621141200/60/30)):
@@ -214,7 +225,7 @@ def get_temp(srt,sst) :
 
     # MIDNIGHT TO SUNRISE
     if srt < 0:
-        logger.debug("MIDNIGHT TO SUNRISE")
+        sunlight_logger.debug("MIDNIGHT TO SUNRISE")
         # temp = values_curve(time=srt,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='ascending',floor=floor,ceiling=ceiling)
         args['time'] = srt
         args['direction'] = 'ascending'
@@ -222,7 +233,7 @@ def get_temp(srt,sst) :
 
     # SUNRISE TO MIDDAY
     elif srt >= 0 and sst < 0 and abs(srt) < abs(sst):
-        logger.debug("SUNRISE TO MIDDAY")
+        sunlight_logger.debug("SUNRISE TO MIDDAY")
         # temp = values_curve(time=srt,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='ascending',floor=floor,ceiling=ceiling)
         args['time'] = srt
         args['direction'] = 'ascending'
@@ -230,7 +241,7 @@ def get_temp(srt,sst) :
 
     # MIDDAY to SUNSET
     elif srt > 0 and sst < 0 and abs(srt) >= abs(sst):
-        logger.debug("MIDDAY to SUNSET")
+        sunlight_logger.debug("MIDDAY to SUNSET")
         # temp = values_curve(time=sst,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='descending',floor=floor,ceiling=ceiling)
         args['time'] = sst
         args['direction'] = 'descending'
@@ -238,7 +249,7 @@ def get_temp(srt,sst) :
 
     # SUNSET TO MIDNIGHT
     elif srt > 0 and sst >= 0:
-        logger.debug("SUNSET TO MIDNIGHT")
+        sunlight_logger.debug("SUNSET TO MIDNIGHT")
         # temp = values_curve(time=sst,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='descending',floor=floor,ceiling=ceiling)
         args['time'] = sst
         args['direction'] = 'descending'
@@ -304,25 +315,25 @@ def get_relative_time(now=datetime.datetime.now(tz=ZoneInfo('US/Central'))):
         # now = datetime.datetime(2022, 3, 14, 20, 15, 0)
         # now = now + datetime.timedelta(1)
         today = now.date() # just used for debugging/logging
-        logger.debug(f"Now: {now}")
+        sunlight_logger.debug(f"Now: {now}")
 
         sunrise = sun.get_local_sunrise_time(now)#.replace(tzinfo=ZoneInfo('US/Central'))
-        logger.debug(f"Sunrise: {sunrise}")
+        sunlight_logger.debug(f"Sunrise: {sunrise}")
         # sunset = sun.get_local_sunset_time(now).replace(tzinfo=pytz.utc).astimezone(pytz.timezone('America/Chicago'))
         # sunset = sun.get_local_sunset_time(now).replace(tzinfo=datetime.timezone.utc).astimezone(ZoneInfo('US/Central'))
         sunset = sun.get_local_sunset_time(now)
         # bug workaround:
         if sunset < sunrise:
             sunset = sunset + datetime.timedelta(1)
-        logger.debug(f"Sunset: {sunset}")
-        logger.debug('On {} the sun rose at {} and set at {}.'.
+        sunlight_logger.debug(f"Sunset: {sunset}")
+        sunlight_logger.debug('On {} the sun rose at {} and set at {}.'.
               format(today, sunrise.strftime('%H:%M'), sunset.strftime('%H:%M')))
 
         # delta = datetime.timedelta(hours=1)
         sr_delta = (now.timestamp() - sunrise.timestamp()) / 60 # number of minutes since sunrise
         ss_delta = (now.timestamp() - sunset.timestamp()) / 60 # number of minutes since sunset
-        logger.debug(f"Sunrise was {int(sr_delta / 6) / 10} hours ago")
-        logger.debug(f"Sunset was {int(ss_delta / 6) / 10} hours ago")
+        sunlight_logger.debug(f"Sunrise was {int(sr_delta / 6) / 10} hours ago")
+        sunlight_logger.debug(f"Sunset was {int(ss_delta / 6) / 10} hours ago")
 
         data = {
             "sunrise": sr_delta,
@@ -332,7 +343,7 @@ def get_relative_time(now=datetime.datetime.now(tz=ZoneInfo('US/Central'))):
         }
 
     except SunTimeException as e:
-        logger.error(f"Problem getting sunrise/sunset times: {e}")
+        sunlight_logger.error(f"Problem getting sunrise/sunset times: {e}")
     else:
         return data
 

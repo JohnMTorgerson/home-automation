@@ -27,7 +27,8 @@ midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
 # client = Client(email=os.environ['WYZE_EMAIL'], password=os.environ['WYZE_PASSWORD'])
 
 def update() :
-    current_values = sunlight.run(client=None,bulbs=[],bulb_props={},now=now)
+    # we can get the current "sunlight" scene values without actually affecting the bulbs by passing empty values
+    current_values = sunlight.run(client=None,bulbs=[],bulb_props={},now=now,log=False)
 
     data = {
         "scenes" : {
@@ -44,19 +45,21 @@ def update() :
     with open("data.json", "w") as f :
         json.dump(data, f)
 
+# get "sunlight" scene bulb temp and brightness values for all times of day
 def get_sunlight_values() :
     interval = 3 # in minutes
     delta = datetime.timedelta(minutes=interval)
     time = midnight
     values = {}
     for i in range(math.floor(24 * 60 / interval)) :
-        value = sunlight.run(client=None,bulbs=[],bulb_props={},now=time)
+        value = sunlight.run(client=None,bulbs=[],bulb_props={},now=time,log=False)
         values[math.floor(time.timestamp() - midnight.timestamp())] = value
         time = time + delta
 
     # pprint(values)
     return values
 
+# get today's sunrise and sunset times
 def get_suntimes() :
     values = sunlight.get_relative_time(now)
     sunrise = values["sunrise_abs"].timestamp() - midnight.timestamp()

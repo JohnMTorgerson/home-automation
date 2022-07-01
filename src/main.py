@@ -31,6 +31,9 @@ stream_handler.setLevel(logging.DEBUG)
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
+# null handler for modules to optionally log nothing
+logging.getLogger('null').addHandler(logging.NullHandler())
+
 # # use the following when testing wyze_sdk from local fork
 # import sys
 # # insert at 1, 0 is the script path (or '' in REPL)
@@ -55,11 +58,13 @@ except Exception as e:
 ##### SCENES #####
 from scenes.timebased.sunlight import sunlight
 # from scenes.timebased import wakeup
+from scenes.basic.thermostat import thermostat
 
 def main() :
     logger.info('=================================================================')
 
-    # get devices
+    # ========== BULBS ========== #
+    # get bulbs for lighting scenes
     bulbs = []
     lr_bulbs = []
     br_bulbs = []
@@ -81,9 +86,22 @@ def main() :
     except Exception as e:
         logger.error(f"Other error retrieving bulbs: {e}")
 
-    # run scenes on specified devices
+    # ========== PLUGS ========== #
+    # get plugs
+    try:
+        plugs = get_devices.get_by_type(client,'Plug')
+        pprint(plugs)
+    except WyzeApiError as e:
+        logger.error(f"WyzeApiError retrieving plugs: {e}")
+    except Exception as e:
+        logger.error(f"Other error retrieving plugs: {e}")
+
+
+    #  ===== run scenes on specified devices ===== #
     sunlight.run(client=client,bulbs=lr_bulbs,bulb_props=bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # adjust the temperature according to daylight
     # wakeup.run(client=client,bulbs=br_bulbs,bulb_props=bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # turn on and gradually brighten the bedroom bulbs according to when my alarm is set
+    # thermostat.run()
+
 
 if __name__ == "__main__" :
     main()

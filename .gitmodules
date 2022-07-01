@@ -1,0 +1,3 @@
+[submodule "src/scenes/basic/thermostat"]
+	path = src/scenes/basic/thermostat
+	url = https://github.com/JohnMTorgerson/thermostat-automation.git
