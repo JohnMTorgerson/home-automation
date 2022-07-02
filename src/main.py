@@ -9,7 +9,9 @@ except:
     from backports.zoneinfo import ZoneInfo
 import get_devices
 # import rooms
-from devices import bulb_props
+from devices import device_props
+
+# print("__package__, __name__ ==", __package__, __name__)
 
 import logging
 logger = logging.getLogger('main')
@@ -72,7 +74,7 @@ def main() :
         bulbs = get_devices.get_by_type(client,'MeshLight')
         # lr_bulbs = list(filter(lambda b : bulb_props.bulbs[b.nickname]["room"] == "Living Room",bulbs))
         for bulb in bulbs :
-            b_prop = bulb_props.bulbs.get(bulb.nickname) # safe if there is no bulb of that nickname
+            b_prop = device_props.bulb_props.bulbs.get(bulb.nickname) # safe if there is no bulb of that nickname
 
             if b_prop :
                 # living room bulbs
@@ -88,9 +90,19 @@ def main() :
 
     # ========== PLUGS ========== #
     # get plugs
+    plugs = []
+    thermostat_plugs = []
     try:
         plugs = get_devices.get_by_type(client,'Plug')
-        pprint(plugs)
+
+        for plug in plugs :
+            p_prop = device_props.plug_props.plugs.get(plug.nickname) # safe if there is no bulb of that nickname
+
+            if p_prop :
+                # only living room or kitchen plugs should be controlled by the thermostat
+                if p_prop["room"] == "Living Room" or p_prop["room"] == "Kitchen" :
+                    thermostat_plugs.append(plug)
+
     except WyzeApiError as e:
         logger.error(f"WyzeApiError retrieving plugs: {e}")
     except Exception as e:
@@ -98,9 +110,9 @@ def main() :
 
 
     #  ===== run scenes on specified devices ===== #
-    sunlight.run(client=client,bulbs=lr_bulbs,bulb_props=bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # adjust the temperature according to daylight
+    sunlight.run(client=client,bulbs=lr_bulbs,bulb_props=device_props.bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # adjust the temperature according to daylight
     # wakeup.run(client=client,bulbs=br_bulbs,bulb_props=bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # turn on and gradually brighten the bedroom bulbs according to when my alarm is set
-    # thermostat.run()
+    thermostat.run(client=client,plugs=thermostat_plugs)
 
 
 if __name__ == "__main__" :
