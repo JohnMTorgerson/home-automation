@@ -12,9 +12,9 @@ except:
 from scenes.timebased.sunlight import sunlight
 
 try :
-    from scenes.basic.thermostat import log_temp
+    from scenes.basic.thermostat import get_data
 except ModuleNotFoundError as e :
-    print("Unable to import log_temp")
+    print("Unable to import get_data")
 
 
 
@@ -35,10 +35,14 @@ midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
 def update() :
     # we can get the current "sunlight" scene values without actually affecting the bulbs by passing empty values
     current_sunlight_values = sunlight.run(client=None,bulbs=[],bulb_props={},now=now,log=False)
+
     try :
-        current_therm_values = log_temp.get_and_log(log=False)
+        current_sensor_values = get_data.get_current(log=False)
     except Exception as e :
-        current_therm_values = {"temp_c":None,"temp_f":None,"humidity":None}
+        current_sensor_values = {"temp_c":None,"temp_f":None,"humidity":None}
+
+    logged_weather_data = get_data.get_logged_weather_data(day_range=7)
+    logged_sensor_values = get_data.get_logged_sensor_data(day_range=7)
 
     data = {
         "scenes" : {
@@ -50,9 +54,13 @@ def update() :
                 "suntimes" : get_suntimes()
             },
             "thermostat" : {
-                "temp_c" : current_therm_values["temp_c"],
-                "temp_f" : current_therm_values["temp_f"],
-                "humidity" : current_therm_values["humidity"]
+                "current" : {
+                    "temp_c" : current_sensor_values["temp_c"],
+                    "temp_f" : current_sensor_values["temp_f"],
+                    "humidity" : current_sensor_values["humidity"]
+                },
+                "logged_sensor" : logged_sensor_values,
+                "logged_weather" : logged_weather_data
             }
         }
     }
