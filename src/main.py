@@ -47,10 +47,6 @@ from wyze_sdk.errors import WyzeApiError
 # import wyze_sdk
 # wyze_sdk.set_file_logger(__name__, 'tmp/log.log')
 
-# updates json data dump for the automation-gui to read from
-import update_json
-update_json.update()
-
 try:
     client = Client(email=os.environ['WYZE_EMAIL'], password=os.environ['WYZE_PASSWORD'])
 except Exception as e:
@@ -113,6 +109,11 @@ def main() :
     sunlight.run(client=client,bulbs=lr_bulbs,bulb_props=device_props.bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # adjust the temperature according to daylight
     # wakeup.run(client=client,bulbs=br_bulbs,bulb_props=bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # turn on and gradually brighten the bedroom bulbs according to when my alarm is set
     thermostat.run(client=client,plugs=thermostat_plugs)
+
+
+    # updates json data dump for the automation-gui to read from
+    import update_json
+    update_json.update()
 
 
 if __name__ == "__main__" :
