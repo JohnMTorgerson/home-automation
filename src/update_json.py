@@ -16,6 +16,11 @@ try :
 except ModuleNotFoundError as e :
     print("Unable to import get_data")
 
+try :
+    from scenes.basic.thermostat import thermostat
+except ModuleNotFoundError as e :
+    print("Unable to import thermostat")
+
 
 
 now = datetime.datetime.now(tz=ZoneInfo('US/Central'))# + datetime.timedelta(days=183)
@@ -44,6 +49,8 @@ def update() :
     logged_weather_data = get_data.get_logged_weather_data(day_range=7)
     logged_sensor_values = get_data.get_logged_sensor_data(day_range=7)
 
+    therm_settings = thermostat.get_user_settings()
+
     data = {
         "scenes" : {
             "sunlight" : {
@@ -54,6 +61,7 @@ def update() :
                 "suntimes" : get_suntimes()
             },
             "thermostat" : {
+                "settings" : therm_settings,
                 "current" : {
                     "temp_c" : current_sensor_values["temp_c"],
                     "temp_f" : current_sensor_values["temp_f"],
