@@ -11,6 +11,8 @@ from wyze_sdk import Client
 from wyze_sdk.errors import WyzeApiError
 
 load_dotenv()
+print(os.environ['WYZE_EMAIL'])
+print(os.environ['WYZE_PASSWORD'])
 client = Client(email=os.environ['WYZE_EMAIL'], password=os.environ['WYZE_PASSWORD'])
 
 def main() :
