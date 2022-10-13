@@ -4,6 +4,7 @@ from pprint import pprint
 import datetime
 from suntime import Sun, SunTimeException
 import math
+import json
 
 try:
     from zoneinfo import ZoneInfo
@@ -27,6 +28,8 @@ except Exception as e:
 
 
 def run(client=None,bulbs=[],bulb_props={},now=None,log=True) :
+    settings = get_user_settings()
+
     # if log=False is passed, we don't want to do any logging, so set to a null handler
     if log == False :
         # set sunlight_logger to null handler
@@ -80,73 +83,79 @@ def run(client=None,bulbs=[],bulb_props={},now=None,log=True) :
 
         # ^^===================== /CRAP FOR LOGGING ONLY ===========================^^
 
-        for bulb in bulbs:
 
-            # GET TIME ADJUSTMENT PER BULB (IF GIVEN), TO APPLY TO ALL SUBSEQUENT PER-BULB ADJUSTMENTS (IF GIVEN)
-            try:
-                adjusted_srt = bulb_props.bulbs[bulb.nickname]['srt_adjust'](srt)
-            except:
-                adjusted_srt = srt
-            try:
-                adjusted_sst = bulb_props.bulbs[bulb.nickname]['sst_adjust'](sst)
-            except:
-                adjusted_sst = sst
+        # ============ set the bulb values if the scene is on ================ #
+        if settings["on"] == True :
 
-            temp = get_temp(adjusted_srt,adjusted_sst)
-            brightness = get_brightness(adjusted_srt,adjusted_sst)
+            for bulb in bulbs:
 
-            # GET ADJUSTED TEMP
-            try:
-                adjusted_temp = bulb_props.bulbs[bulb.nickname]["temp_adjust"](temp)
-            except:
-                sunlight_logger.warning(f"Could not find adjusted temp for {bulb.nickname}")
-                adjusted_temp = temp
+                # GET TIME ADJUSTMENT PER BULB (IF GIVEN), TO APPLY TO ALL SUBSEQUENT PER-BULB ADJUSTMENTS (IF GIVEN)
+                try:
+                    adjusted_srt = bulb_props.bulbs[bulb.nickname]['srt_adjust'](srt)
+                except:
+                    adjusted_srt = srt
+                try:
+                    adjusted_sst = bulb_props.bulbs[bulb.nickname]['sst_adjust'](sst)
+                except:
+                    adjusted_sst = sst
 
-            # GET ADJUSTED BRIGHTNESS
-            try:
-                adjusted_brightness = bulb_props.bulbs[bulb.nickname]["brightness_adjust"](brightness,adjusted_temp)
-            except:
-                sunlight_logger.warning(f"Could not find adjusted brightness for {bulb.nickname}")
-                adjusted_brightness = brightness
+                temp = get_temp(adjusted_srt,adjusted_sst)
+                brightness = get_brightness(adjusted_srt,adjusted_sst)
 
-            # GET ON/OFF ADJUSTMENT
-            try:
-                turn_on = bulb_props.bulbs[bulb.nickname]["on_adjust"](adjusted_brightness)
-            except:
-                sunlight_logger.debug(f"Could not find on_adjust from bulb_props for {bulb.nickname}, so leaving on")
-                turn_on = True
+                # GET ADJUSTED TEMP
+                try:
+                    adjusted_temp = bulb_props.bulbs[bulb.nickname]["temp_adjust"](temp)
+                except:
+                    sunlight_logger.warning(f"Could not find adjusted temp for {bulb.nickname}")
+                    adjusted_temp = temp
 
-            # round the values to nearest integer before sending to API
-            adjusted_temp = round(adjusted_temp)
-            adjusted_brightness = round(adjusted_brightness)
+                # GET ADJUSTED BRIGHTNESS
+                try:
+                    adjusted_brightness = bulb_props.bulbs[bulb.nickname]["brightness_adjust"](brightness,adjusted_temp)
+                except:
+                    sunlight_logger.warning(f"Could not find adjusted brightness for {bulb.nickname}")
+                    adjusted_brightness = brightness
 
-            # sunlight_logger.debug(f"{bulb.nickname}: temp={adjusted_temp}, brightness={adjusted_brightness}, on={turn_on}")
+                # GET ON/OFF ADJUSTMENT
+                try:
+                    turn_on = bulb_props.bulbs[bulb.nickname]["on_adjust"](adjusted_brightness)
+                except:
+                    sunlight_logger.debug(f"Could not find on_adjust from bulb_props for {bulb.nickname}, so leaving on")
+                    turn_on = True
 
-            # SEE IF BULB IS ACTUALLY ON OR OFF ALREADY
-            try:
-                is_on = client.bulbs.info(device_mac=bulb.mac).is_on
-            except:
-                sunlight_logger.warning(f"Could not find on/off state for {bulb.nickname}")
-                is_on = False
+                # round the values to nearest integer before sending to API
+                adjusted_temp = round(adjusted_temp)
+                adjusted_brightness = round(adjusted_brightness)
 
-            # SET ALL THE VALUES WE JUST GOT
-            if turn_on is True:
-                # if turn_on is true, any adjustments we make will turn the bulb on if it's off,
-                # so all we need to do is make the adjustments
-                # sunlight_logger.debug('on is True')
-                # client.bulbs.turn_on(device_mac=bulb.mac, device_model=bulb.product.model)
-                client.bulbs.set_color_temp(device_mac=bulb.mac, device_model=bulb.product.model, color_temp=adjusted_temp)
-                client.bulbs.set_brightness(device_mac=bulb.mac, device_model=bulb.product.model, brightness=adjusted_brightness)
-            elif turn_on is False and is_on:
-                # if turn_on is false and the bulb is actually on, then we need to manually turn it off
-                # sunlight_logger.debug('on is False and bulb.is_on')
-                client.bulbs.turn_off(device_mac=bulb.mac, device_model=bulb.product.model)
+                # sunlight_logger.debug(f"{bulb.nickname}: temp={adjusted_temp}, brightness={adjusted_brightness}, on={turn_on}")
 
-            num_spaces = max_name_length - len(bulb.nickname)
-            spaces = " " * num_spaces
+                # SEE IF BULB IS ACTUALLY ON OR OFF ALREADY
+                try:
+                    is_on = client.bulbs.info(device_mac=bulb.mac).is_on
+                except:
+                    sunlight_logger.warning(f"Could not find on/off state for {bulb.nickname}")
+                    is_on = False
 
-            sunlight_logger.info(f"{bulb.nickname}{spaces} (adjusted values) --- sunrise: {int(adjusted_srt)}, sunset: {int(adjusted_sst)}, temp: {adjusted_temp}, brightness: {adjusted_brightness}, turn_on={turn_on}, is_on={is_on}")
+                # SET ALL THE VALUES WE JUST GOT
+                if turn_on is True:
+                    # if turn_on is true, any adjustments we make will turn the bulb on if it's off,
+                    # so all we need to do is make the adjustments
+                    # sunlight_logger.debug('on is True')
+                    # client.bulbs.turn_on(device_mac=bulb.mac, device_model=bulb.product.model)
+                    client.bulbs.set_color_temp(device_mac=bulb.mac, device_model=bulb.product.model, color_temp=adjusted_temp)
+                    client.bulbs.set_brightness(device_mac=bulb.mac, device_model=bulb.product.model, brightness=adjusted_brightness)
+                elif turn_on is False and is_on:
+                    # if turn_on is false and the bulb is actually on, then we need to manually turn it off
+                    # sunlight_logger.debug('on is False and bulb.is_on')
+                    client.bulbs.turn_off(device_mac=bulb.mac, device_model=bulb.product.model)
 
+                num_spaces = max_name_length - len(bulb.nickname)
+                spaces = " " * num_spaces
+
+                sunlight_logger.info(f"{bulb.nickname}{spaces} (adjusted values) --- sunrise: {int(adjusted_srt)}, sunset: {int(adjusted_sst)}, temp: {adjusted_temp}, brightness: {adjusted_brightness}, turn_on={turn_on}, is_on={is_on}")
+
+        else:
+            sunlight_logger.info(f"***************** SUNLIGHT SCENE IS SET TO OFF, NOT ADJUSTING BULBS")
 
     else:
         sunlight_logger.error("Could not get sunrise/sunset times")
@@ -346,6 +355,21 @@ def get_relative_time(now=datetime.datetime.now(tz=ZoneInfo('US/Central'))):
         sunlight_logger.error(f"Problem getting sunrise/sunset times: {e}")
     else:
         return data
+
+def get_user_settings() :
+    try:
+        with open("scenes/timebased/sunlight/settings.json", "r") as f :
+            settings = json.load(f)
+    except Exception as e:
+        sunlight_logger.error(f"Error: Unable to retrieve sunlight user settings from file. Temporarily using defaults\n{e}")
+        # values designed to keep the A/C off until the problem is fixed
+        settings = {
+            "on" : True,
+        }
+
+    sunlight_logger.info(f"Sunlight settings: {settings}")
+
+    return settings
 
 if __name__ == "__main__" :
     run()
