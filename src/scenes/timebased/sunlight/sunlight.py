@@ -188,12 +188,18 @@ def get_brightness(srt,sst) :
         # print("MIDNIGHT TO SUNRISE")
         args['time'] = srt
         args['direction'] = 'ascending'
+        args['offset'] = 75
         b = values_curve(args)
 
     # SUNRISE TO MIDDAY
     elif srt >= 0 and sst < 0 and abs(srt) < abs(sst):
         # print("SUNRISE TO MIDDAY")
-        b = 100
+        # b = 100
+        args['time'] = srt
+        args['direction'] = 'ascending'
+        args['offset'] = 75
+        b = values_curve(args)
+
 
     # MIDDAY to SUNSET
     elif srt > 0 and sst < 0 and abs(srt) >= abs(sst):
@@ -238,6 +244,7 @@ def get_temp(srt,sst) :
         # temp = values_curve(time=srt,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='ascending',floor=floor,ceiling=ceiling)
         args['time'] = srt
         args['direction'] = 'ascending'
+        args['offset'] = 15
         temp = values_curve(args)
 
     # SUNRISE TO MIDDAY
@@ -246,6 +253,7 @@ def get_temp(srt,sst) :
         # temp = values_curve(time=srt,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='ascending',floor=floor,ceiling=ceiling)
         args['time'] = srt
         args['direction'] = 'ascending'
+        args['offset'] = 15
         temp = values_curve(args)
 
     # MIDDAY to SUNSET
@@ -254,6 +262,7 @@ def get_temp(srt,sst) :
         # temp = values_curve(time=sst,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='descending',floor=floor,ceiling=ceiling)
         args['time'] = sst
         args['direction'] = 'descending'
+        args['offset'] = 20
         temp = values_curve(args)
 
     # SUNSET TO MIDNIGHT

@@ -46,7 +46,7 @@ def update() :
     except Exception as e :
         current_sensor_values = {"temp_c":None,"temp_f":None,"humidity":None}
 
-    logged_weather_data = get_data.get_logged_weather_data(day_range=7)
+    logged_weather_data = get_data.get_logged_weather_data(day_range=2)
     logged_sensor_values = get_data.get_logged_sensor_data(day_range=7)
 
     therm_settings = thermostat.get_user_settings()
