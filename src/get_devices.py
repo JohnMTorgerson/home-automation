@@ -2,13 +2,13 @@ import os
 from pprint import pprint
 
 # use the following when testing wyze_sdk from local fork
-import sys
-# insert at 1, 0 is the script path (or '' in REPL)
-sys.path.insert(1, '../!...Forks/wyze_sdk_fork')
+# import sys
+# # insert at 1, 0 is the script path (or '' in REPL)
+# sys.path.insert(1, '../!...Forks/wyze_sdk_fork')
 
 from wyze_sdk.errors import WyzeApiError
 
-# import wyze_sdk
+import wyze_sdk
 # wyze_sdk.set_file_logger(__name__, 'tmp/log.log')
 
 

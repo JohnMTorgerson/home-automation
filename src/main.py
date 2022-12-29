@@ -87,7 +87,7 @@ def main() :
     # ========== PLUGS ========== #
     # get plugs
     plugs = []
-    thermostat_plugs = []
+    thermostat_plugs = {}
     try:
         plugs = get_devices.get_by_type(client,'Plug')
 
@@ -97,7 +97,10 @@ def main() :
             if p_prop :
                 # only living room or kitchen plugs should be controlled by the thermostat
                 if p_prop["room"] == "Living Room" or p_prop["room"] == "Kitchen" :
-                    thermostat_plugs.append(plug)
+                    if p_prop["controlling"] not in thermostat_plugs :
+                        thermostat_plugs[p_prop["controlling"]] = []
+
+                    thermostat_plugs[p_prop["controlling"]].append(plug)
 
     except WyzeApiError as e:
         logger.error(f"WyzeApiError retrieving plugs: {e}")
