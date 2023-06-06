@@ -11,4 +11,8 @@ plugs = {
         "controlling":"Humidifier",
         "room":"Living Room",
     },
+    "Humidifier Kitchen":{
+        "controlling":"Humidifier",
+        "room":"Kitchen",
+    },
 }

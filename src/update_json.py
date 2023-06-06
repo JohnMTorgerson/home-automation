@@ -44,7 +44,7 @@ def update() :
     try :
         current_sensor_values = get_data.get_current(log=False)
     except Exception as e :
-        current_sensor_values = {"temp_c":None,"temp_f":None,"humidity":None}
+        current_sensor_values = {"temp_c":None,"temp_f":None,"rel_hum":None,"abs_hum":None}
 
     logged_weather_data = get_data.get_logged_weather_data(day_range=2)
     logged_sensor_values = get_data.get_logged_sensor_data(day_range=7)
@@ -65,7 +65,8 @@ def update() :
                 "current" : {
                     "temp_c" : current_sensor_values["temp_c"],
                     "temp_f" : current_sensor_values["temp_f"],
-                    "humidity" : current_sensor_values["humidity"]
+                    "rel_hum" : current_sensor_values["rel_hum"],
+                    "abs_hum" : current_sensor_values["abs_hum"]
                 },
                 "logged_sensor" : logged_sensor_values,
                 "logged_weather" : logged_weather_data

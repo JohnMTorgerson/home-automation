@@ -84,6 +84,9 @@ def main() :
     except Exception as e:
         logger.error(f"Other error retrieving bulbs: {e}")
 
+    # ========== LED STRIPS ========== #
+    # get LED strips for lighting scenes
+
     # ========== PLUGS ========== #
     # get plugs
     plugs = []
@@ -95,8 +98,8 @@ def main() :
             p_prop = device_props.plug_props.plugs.get(plug.nickname) # safe if there is no bulb of that nickname
 
             if p_prop :
-                # only living room or kitchen plugs should be controlled by the thermostat
-                if p_prop["room"] == "Living Room" or p_prop["room"] == "Kitchen" :
+                # specify plugs in which rooms should be controlled by thermostat
+                if p_prop["room"] == "Living Room" or p_prop["room"] == "Kitchen" : # or p_prop["room"] == "Bedroom" :
                     if p_prop["controlling"] not in thermostat_plugs :
                         thermostat_plugs[p_prop["controlling"]] = []
 

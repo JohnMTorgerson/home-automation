@@ -262,7 +262,7 @@ def get_temp(srt,sst) :
         # temp = values_curve(time=sst,offset=offset,low=warmest,high=coldest,steepness=steepness,direction='descending',floor=floor,ceiling=ceiling)
         args['time'] = sst
         args['direction'] = 'descending'
-        args['offset'] = 20
+        # args['offset'] = 20
         temp = values_curve(args)
 
     # SUNSET TO MIDNIGHT
