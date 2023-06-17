@@ -29,7 +29,7 @@ bulbs = {
         "brightness_adjust": lambda b,t : b,
         "temp_adjust": lambda t : min(t + 250,max_temp)
     },
-    "Ceiling NE":{
+    "Ceiling N":{
         "room":"Living Room",
         "sst_adjust": lambda sst : sst + 60, # to warm and dim earlier
         "srt_adjust": lambda srt : srt - 60, # to bright and cool later
@@ -37,7 +37,7 @@ bulbs = {
         "temp_adjust": lambda t : max(t - 200,min_temp),
         "on_adjust": lambda b : False if b < 8 else True
     },
-    "Ceiling NW":{
+    "Ceiling W":{
         "room":"Living Room",
         "sst_adjust": lambda sst : sst + 60, # to warm and dim earlier
         "srt_adjust": lambda srt : srt - 60, # to bright and cool later
