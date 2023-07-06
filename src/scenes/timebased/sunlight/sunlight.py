@@ -371,9 +371,9 @@ def get_user_settings() :
             settings = json.load(f)
     except Exception as e:
         sunlight_logger.error(f"Error: Unable to retrieve sunlight user settings from file. Temporarily using defaults\n{e}")
-        # values designed to keep the A/C off until the problem is fixed
+        # turn off if unable to read settings
         settings = {
-            "on" : True,
+            "on" : False,
         }
 
     sunlight_logger.info(f"Sunlight settings: {settings}")

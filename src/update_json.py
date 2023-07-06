@@ -50,10 +50,12 @@ def update() :
     logged_sensor_values = get_data.get_logged_sensor_data(day_range=7)
 
     therm_settings = thermostat.get_user_settings()
+    sunlight_settings = sunlight.get_user_settings()
 
     data = {
         "scenes" : {
             "sunlight" : {
+                "settings" : sunlight_settings,
                 "current_system_time" : now.timestamp(),
                 "current_temp" : current_sunlight_values[0],
                 "current_brightness" : current_sunlight_values[1],
