@@ -7,5 +7,5 @@ logs/
 *.gcx
 run.sh
 requirements.txt
-src/requirements.txt
-src/data.json
+home_automation/requirements.txt
+home_automation/data.json

@@ -9,7 +9,15 @@ try:
 except:
     from backports.zoneinfo import ZoneInfo
 
-from scenes.timebased.sunlight import sunlight
+try :
+    from scenes.timebased.sunlight import sunlight
+except ModuleNotFoundError as e :
+    print("Unable to import sunlight")
+
+try :
+    from scenes.basic.color import color
+except ModuleNotFoundError as e :
+    print("Unable to import color")
 
 try :
     from scenes.basic.thermostat import get_data
@@ -51,6 +59,7 @@ def update() :
 
     therm_settings = thermostat.get_user_settings()
     sunlight_settings = sunlight.get_user_settings()
+    color_settings = color.get_user_settings()
 
     data = {
         "scenes" : {
@@ -61,6 +70,9 @@ def update() :
                 "current_brightness" : current_sunlight_values[1],
                 "sunlight_curve" : get_sunlight_values(),
                 "suntimes" : get_suntimes()
+            },
+            "color" : {
+                "settings": color_settings
             },
             "thermostat" : {
                 "settings" : therm_settings,
