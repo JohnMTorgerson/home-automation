@@ -15,7 +15,7 @@ except:
 
 import logging
 # create logger
-logger = logging.getLogger(f"main.{__name__}")
+logger = logging.getLogger(f"HA.{__name__}")
 
 # try:
 #     load_dotenv()

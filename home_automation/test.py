@@ -1,5 +1,4 @@
 import os
-from dotenv import load_dotenv
 from pprint import pprint
 
 # # use the following when testing wyze_sdk from local fork
@@ -10,10 +9,9 @@ from pprint import pprint
 from wyze_sdk import Client
 from wyze_sdk.errors import WyzeApiError
 
-load_dotenv()
-print(os.environ['WYZE_EMAIL'])
-print(os.environ['WYZE_PASSWORD'])
-client = Client(email=os.environ['WYZE_EMAIL'], password=os.environ['WYZE_PASSWORD'])
+import login
+
+client = login.get_client()
 
 def main() :
     # get_devices()

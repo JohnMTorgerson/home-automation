@@ -7,16 +7,12 @@ try:
     from zoneinfo import ZoneInfo
 except:
     from backports.zoneinfo import ZoneInfo
-import get_bulbs
-import get_plugs
-# import rooms
-from devices import device_props
-import update_json
 
-# # use the following when testing wyze_sdk from local fork
-# import sys
-# # insert at 1: 0 is the script path (or '' in REPL)
-# sys.path.insert(1, '../!...Forks/wyze_sdk_fork')
+
+# use the following when testing wyze_sdk from local fork
+import sys
+# insert at 1: 0 is the script path (or '' in REPL)
+sys.path.insert(1, os.path.abspath('../../!...Forks/'))
 
 from wyze_sdk import Client
 from wyze_sdk.errors import WyzeApiError
@@ -24,13 +20,19 @@ from wyze_sdk.errors import WyzeApiError
 # wyze_sdk.set_file_logger(__name__, 'tmp/log.log')
 
 
+import login
+import get_bulbs
+import get_plugs
+# import rooms
+from devices import device_props
+import update_json
 
 # print("__package__, __name__ ==", __package__, __name__)
 
 import logging
-logger = logging.getLogger('main')
+logger = logging.getLogger('HA')
 logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(name)s : %(message)s')
+formatter = logging.Formatter("%(asctime)s %(name)s.%(funcName)s() line %(lineno)s %(levelname).5s :: %(message)s")
 # log to file at INFO level
 file_handler = logging.FileHandler(os.path.abspath(f"{os.environ['LOG_PATH']}/log.log"))
 file_handler.setLevel(logging.INFO)
@@ -52,7 +54,8 @@ logging.getLogger('null').addHandler(logging.NullHandler())
 
 # ========== GET WYZE CLIENT ========== #
 try:
-    client = Client(email=os.environ['WYZE_EMAIL'], password=os.environ['WYZE_PASSWORD'])
+    # client = Client(email=os.environ['WYZE_EMAIL'], password=os.environ['WYZE_PASSWORD'])
+    client = login.get_client()
 except Exception as e:
     logger.critical(f"Could not get client. Aborting: {e}")
     raise e

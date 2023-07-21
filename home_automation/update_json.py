@@ -34,16 +34,6 @@ except ModuleNotFoundError as e :
 now = datetime.datetime.now(tz=ZoneInfo('US/Central'))# + datetime.timedelta(days=183)
 midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-# # use the following when testing wyze_sdk from local fork
-# import sys
-# # insert at 1, 0 is the script path (or '' in REPL)
-# sys.path.insert(1, '../!...Forks/wyze_sdk_fork')
-
-# from wyze_sdk import Client
-# from wyze_sdk.errors import WyzeApiError
-#
-# load_dotenv()
-# client = Client(email=os.environ['WYZE_EMAIL'], password=os.environ['WYZE_PASSWORD'])
 
 def update() :
     # we can get the current "sunlight" scene values without actually affecting the bulbs by passing empty values

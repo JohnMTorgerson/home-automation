@@ -21,7 +21,7 @@ except:
 
 import logging
 # create logger
-sunlight_logger = logging.getLogger(f"main.{__name__}")
+sunlight_logger = logging.getLogger(f"HA.{__name__}")
 # sunlight_logger = logging.getLogger(__name__)
 
 try:
@@ -44,7 +44,7 @@ def run(client=None,bulbs=[],bulb_props={},now=None,log=True) :
         # otherwise, we have to reset to the actual logger (in case False was passed previously)
         # this is clearly not the best way to handle this, but it'll work for now
         # probably this whole project needs to be re-written using classes
-        sunlight_logger = logging.getLogger(f"main.{__name__}")
+        sunlight_logger = logging.getLogger(f"HA.{__name__}")
 
     sunlight_logger.info('Running sunlight scene...')
 
@@ -66,18 +66,14 @@ def run(client=None,bulbs=[],bulb_props={},now=None,log=True) :
         temp = 2700
         brightness = 100
 
-
-        # ======================= CRAP FOR LOGGING ONLY =============================
-        # These baseline values are only calculated for logging purposes;
-        # we calculate the actual values used per bulb in the for loop below;
-        # (there may be per-bulb adjustments for time, and then also for temp and brightness in addition)
         try :
-            temp_baseline = round(get_temp(srt,sst),2)
-            brightness_baseline = round(get_brightness(srt,sst),2)
+            baseline_temp = get_temp(srt,sst)
+            baseline_brightness = get_brightness(srt,sst)
         except Exception as e:
             sunlight_logger.error(e)
             raise e
-        sunlight_logger.info(f"BASELINE VALUES ==== sunrise: {int(srt)}, sunset: {int(sst)}, temp: {temp_baseline}, brightness: {brightness_baseline}")
+        
+        sunlight_logger.info(f"BASELINE VALUES ==== sunrise: {int(srt)}, sunset: {int(sst)}, temp: {round(baseline_temp,2)}, brightness: {round(baseline_brightness,2)}")
 
         # just to prettify the logging
         max_name_length = 0
@@ -85,8 +81,6 @@ def run(client=None,bulbs=[],bulb_props={},now=None,log=True) :
             name_length = len(bulb.nickname)
             if name_length > max_name_length :
                 max_name_length = name_length
-
-        # ^^===================== /CRAP FOR LOGGING ONLY ===========================^^
 
 
         # ============ set the bulb values if the scene is on ================ #
@@ -104,8 +98,12 @@ def run(client=None,bulbs=[],bulb_props={},now=None,log=True) :
                 except:
                     adjusted_sst = sst
 
-                temp = get_temp(adjusted_srt,adjusted_sst)
-                brightness = get_brightness(adjusted_srt,adjusted_sst)
+                if adjusted_srt != srt or adjusted_sst != sst :
+                    temp = get_temp(adjusted_srt,adjusted_sst)
+                    brightness = get_brightness(adjusted_srt,adjusted_sst)
+                else :
+                    temp = baseline_temp
+                    brightness = baseline_brightness
 
                 # GET ADJUSTED TEMP
                 try:
@@ -125,7 +123,7 @@ def run(client=None,bulbs=[],bulb_props={},now=None,log=True) :
                 try:
                     turn_on = bulb_props.bulbs[bulb.nickname]["on_adjust"](adjusted_brightness)
                 except:
-                    sunlight_logger.debug(f"Could not find on_adjust from bulb_props for {bulb.nickname}, so leaving on")
+                    # sunlight_logger.debug(f"Could not find on_adjust from bulb_props for {bulb.nickname}, so leaving on")
                     turn_on = True
 
                 # round the values to nearest integer before sending to API
@@ -153,11 +151,12 @@ def run(client=None,bulbs=[],bulb_props={},now=None,log=True) :
                     # if turn_on is false and the bulb is actually on, then we need to manually turn it off
                     # sunlight_logger.debug('on is False and bulb.is_on')
                     client.bulbs.turn_off(device_mac=bulb.mac, device_model=bulb.product.model)
+                    sunlight_logger.debug(f"on_adjust for {bulb.nickname} is FALSE, so turning off")
 
                 num_spaces = max_name_length - len(bulb.nickname)
                 spaces = " " * num_spaces
 
-                sunlight_logger.info(f"{bulb.nickname}{spaces} (adjusted values) --- sunrise: {int(adjusted_srt)}, sunset: {int(adjusted_sst)}, temp: {adjusted_temp}, brightness: {adjusted_brightness}, turn_on={turn_on}, is_on={is_on}")
+                sunlight_logger.info(f"{bulb.nickname}{spaces} === sr:{int(adjusted_srt): <{5}} ss:{int(adjusted_sst): <{5}} tmp:{adjusted_temp}, brt:{adjusted_brightness: <{3}}")#, turn_on={turn_on}, is_on={is_on}")
 
         else:
             sunlight_logger.info(f"***************** SUNLIGHT SCENE IS SET TO OFF, NOT ADJUSTING BULBS")
@@ -173,7 +172,7 @@ def run(client=None,bulbs=[],bulb_props={},now=None,log=True) :
 
     # the return value is not used for anything during the normal running of the script;
     # but it is used for creating json data of the whole values curve, which is referenced by the automation GUI
-    return [temp_baseline,brightness_baseline]
+    return [baseline_temp,baseline_brightness]
 
 
 def get_brightness(srt,sst) :
@@ -241,7 +240,7 @@ def get_temp(srt,sst) :
 
 
     if coldest < warmest:
-        raise Exception('warmest temp must be a smaller value than coldest temp')
+        raise ValueError('warmest temp must be a smaller value than coldest temp')
 
     # MIDNIGHT TO SUNRISE
     if srt < 0:

@@ -10,17 +10,10 @@ import inspect
 path_ = os.path.dirname(inspect.getabsfile(inspect.currentframe()))
 
 # create logger
-color_logger = logging.getLogger(f"main.{__name__}")
+color_logger = logging.getLogger(f"HA.{__name__}")
 settings = {}
 
 def run(client=None,bulbs=[],bulb_props={},log=True) :
-    print("========== RUNNING COLOR SCENE ============")
-    global settings
-    settings = get_user_settings()
-
-    # bulbs = settings["bulbs"]
-    # bulb_props = settings["bulb_props"]
-
     # if log=False is passed, we don't want to do any logging, so set to a null handler
     if log == False :
         # set color_logger to null handler
@@ -30,9 +23,18 @@ def run(client=None,bulbs=[],bulb_props={},log=True) :
         # otherwise, we have to reset to the actual logger (in case False was passed previously)
         # this is clearly not the best way to handle this, but it'll work for now
         # probably this whole project needs to be re-written using classes
-        color_logger = logging.getLogger(f"main.{__name__}")
+        color_logger = logging.getLogger(f"HA.{__name__}")
 
-    color_logger.info('Running color scene...')
+
+    color_logger.info("========== RUNNING COLOR SCENE ==========")
+
+    global settings
+    settings = get_user_settings()
+
+    # bulbs = settings["bulbs"]
+    # bulb_props = settings["bulb_props"]
+
+    # color_logger.info('Running color scene...')
 
     if len(bulbs) > 0 and client is None or isinstance(client,list) :
         err = 'Color.run() could not get Wyze client; aborting'
@@ -75,8 +77,8 @@ def run(client=None,bulbs=[],bulb_props={},log=True) :
             try:
                 turn_on = bulb_props.bulbs[bulb.nickname]["on_adjust"](adjusted_brightness)
             except:
-                color_logger.debug(f"Could not find on_adjust from bulb_props for {bulb.nickname}, so leaving on")
-                turn_on = True
+                # color_logger.debug(f"Could not find on_adjust from bulb_props for {bulb.nickname}, so leaving on")
+                turn_on = True                
 
             # round the brightness value to nearest integer before sending to API
             adjusted_brightness = round(adjusted_brightness)
@@ -98,16 +100,20 @@ def run(client=None,bulbs=[],bulb_props={},log=True) :
                 # client.bulbs.turn_on(device_mac=bulb.mac, device_model=bulb.product.model)
                 client.bulbs.set_color(device_mac=bulb.mac, device_model=bulb.product.model, color=adjusted_color)
                 client.bulbs.set_brightness(device_mac=bulb.mac, device_model=bulb.product.model, brightness=adjusted_brightness)
+
             elif turn_on is False and is_on:
                 # if turn_on is false and the bulb is actually on, then we need to manually turn it off
                 # color_logger.debug('on is False and bulb.is_on')
                 client.bulbs.turn_off(device_mac=bulb.mac, device_model=bulb.product.model)
+                color_logger.debug(f"on_adjust for {bulb.nickname} is FALSE, so turning off")
 
             # just to prettify the logging
             num_spaces = max_name_length - len(bulb.nickname)
             spaces = " " * num_spaces
 
-            color_logger.info(f"{bulb.nickname}{spaces} (adjusted values) --- color: {adjusted_color}, brightness: {adjusted_brightness}, turn_on={turn_on}, is_on={is_on}")
+            color_logger.info(f"{bulb.nickname}{spaces} === color:#{adjusted_color}, brightness:{adjusted_brightness: <{3}}")#, turn_on={turn_on}, is_on={is_on}")
+            # bulb_info = client.bulbs.info(device_mac=bulb.mac)
+            # color_logger.debug(f"{bulb.nickname}{spaces}--- real:  {bulb_info.color},       real: {bulb_info.brightness}")
 
     else:
         color_logger.info(f"***************** COLOR SCENE IS SET TO OFF, NOT ADJUSTING BULBS")
@@ -194,5 +200,4 @@ def set_values(color,brightness) :
         color_logger.error(f"Error: Unable to retrieve color settings from file. Cannot update bulbs/bulb_props/login info\n{e}")
 
 if __name__ == "__main__" :
-    update_settings()
     run()
