@@ -3,10 +3,10 @@ import dotenv
 dotenv.load_dotenv()
 dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
 
-# use the following when testing wyze_sdk from local fork
-import sys
-# insert at 1: 0 is the script path (or '' in REPL)
-sys.path.insert(1, os.path.abspath('../../!...Forks/'))
+# # use the following when testing wyze_sdk from local fork
+# import sys
+# # insert at 1: 0 is the script path (or '' in REPL)
+# sys.path.insert(1, os.path.abspath('../../!...Forks/'))
 
 from wyze_sdk import Client
 from wyze_sdk.errors import WyzeApiError
@@ -16,11 +16,13 @@ def get_client():
     try:
         print("Trying access token...")
         client = Client(token=os.environ['WYZE_ACCESS_TOKEN'])
+        client.devices_list() # check if we have client access
     except Exception as e:
         try:
             print(repr(e))
             print(f"Didn't work, trying refresh token...")
             client = Client(token=os.environ['WYZE_REFRESH_TOKEN'])
+            client.devices_list() # check if we have client access
         except Exception as e:
             print(repr(e))
             print(f"Didn't work, trying regular login and saving new access/refresh tokens...")
@@ -31,6 +33,7 @@ def get_client():
             dotenv.set_key(dotenv_path,'WYZE_REFRESH_TOKEN',response['refresh_token'])
 
             client = Client(token=response['access_token'])
+            client.devices_list() # check if we have client access
 
     print("successfully logged in to client...")
 

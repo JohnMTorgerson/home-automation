@@ -9,10 +9,10 @@ except:
     from backports.zoneinfo import ZoneInfo
 
 
-# use the following when testing wyze_sdk from local fork
-import sys
-# insert at 1: 0 is the script path (or '' in REPL)
-sys.path.insert(1, os.path.abspath('../../!...Forks/'))
+# # use the following when testing wyze_sdk from local fork
+# import sys
+# # insert at 1: 0 is the script path (or '' in REPL)
+# sys.path.insert(1, os.path.abspath('../../!...Forks/'))
 
 from wyze_sdk import Client
 from wyze_sdk.errors import WyzeApiError
@@ -102,11 +102,13 @@ def main() :
 ################################
 
 
-def sunlight_scene() :
-    sunlight.run(client=client,bulbs=bulbs["living_room"],bulb_props=device_props.bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # adjust the temperature according to daylight
+def sunlight_scene(grp_filter=None) :
+    filtered_bulbs = get_bulbs.filter_by_group(bulbs["living_room"],grp_filter) # if grp_filter is None, will return all
+    sunlight.run(client=client,bulbs=filtered_bulbs,bulb_props=device_props.bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # adjust the temperature according to daylight
 
-def color_scene() :
-    color.run(client=client,bulbs=bulbs["living_room"],bulb_props=device_props.bulb_props)
+def color_scene(grp_filter=None) :
+    filtered_bulbs = get_bulbs.filter_by_group(bulbs["living_room"],grp_filter) # if grp_filter is None, will return all
+    color.run(client=client,bulbs=filtered_bulbs,bulb_props=device_props.bulb_props)
 
 # def wakeup_scene() :
 #     wakeup.run(client=client,bulbs=bulbs["bedroom"],bulb_props=bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # turn on and gradually brighten the bedroom bulbs according to when my alarm is set

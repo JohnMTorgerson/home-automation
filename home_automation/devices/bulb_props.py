@@ -36,6 +36,7 @@ bulbs = {
     },
     "Ceiling N":{
         "room":"Living Room",
+        "groups":["ceiling"],
         "sst_adjust": lambda sst : sst + 60, # to warm and dim earlier
         "srt_adjust": lambda srt : srt - 60, # to bright and cool later
         "brightness_adjust": lambda b,t=5000 : round(max_b * pow(b / max_b,2) * min(pow(t/5000,1),1)),
@@ -45,6 +46,7 @@ bulbs = {
     },
     "Ceiling W":{
         "room":"Living Room",
+        "groups":["ceiling"],
         "sst_adjust": lambda sst : sst + 60, # to warm and dim earlier
         "srt_adjust": lambda srt : srt - 60, # to bright and cool later
         "brightness_adjust": lambda b,t=5300 : round(max_b * pow(b / max_b,2) * min(pow(t/5300,1.5),1)),
@@ -54,6 +56,7 @@ bulbs = {
     },
     "Ceiling S":{
         "room":"Living Room",
+        "groups":["ceiling"],
         "sst_adjust": lambda sst : sst + 60, # to warm and dim earlier
         "srt_adjust": lambda srt : srt - 60, # to bright and cool later
         "brightness_adjust": lambda b,t=5300 : round(max_b * pow(b / max_b,2) * min(pow(t/5300,1.5),1)),

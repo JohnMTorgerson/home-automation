@@ -26,3 +26,15 @@ def get(client) :
                 bulbs["bedroom"].append(bulb)
 
     return bulbs
+
+def filter_by_group(bulbs,grp_name=None) :
+    if grp_name is None :
+        return bulbs
+    
+    def grp_filter(bulb) :
+        try:
+            return grp_name in device_props.bulb_props.bulbs[bulb.nickname]["groups"]
+        except KeyError as e:
+            return False
+        
+    return list(filter(grp_filter, bulbs))

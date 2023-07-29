@@ -4,7 +4,7 @@ from pprint import pprint
 # use the following when testing wyze_sdk from local fork
 # import sys
 # # insert at 1, 0 is the script path (or '' in REPL)
-# sys.path.insert(1, '../!...Forks/wyze_sdk_fork')
+# sys.path.insert(1, os.path.abspath('../../!...Forks/'))
 
 from wyze_sdk.errors import WyzeApiError
 
