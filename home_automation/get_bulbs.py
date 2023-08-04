@@ -8,6 +8,7 @@ def get(client) :
     bulbs = {
         "all": [],
         "living_room" : [],
+        "kitchen" : [],
         "bedroom" : []
     }
 
@@ -21,6 +22,9 @@ def get(client) :
             # living room bulbs
             if b_prop["room"] == "Living Room" :
                 bulbs["living_room"].append(bulb)
+            # kitchen bulbs
+            if b_prop["room"] == "Kitchen" :
+                bulbs["kitchen"].append(bulb)
             # bedroom bulbs
             if b_prop["room"] == "Bedroom" :
                 bulbs["bedroom"].append(bulb)

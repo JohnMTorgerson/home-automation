@@ -1,7 +1,11 @@
 plugs = {
-    "A/C Living Room":{
+    "A/C Kitchen East":{
         "controlling":"A/C",
-        "room":"Living Room",
+        "room":"Kitchen",
+    },
+    "A/C Kitchen West":{
+        "controlling":"A/C",
+        "room":"Kitchen",
     },
     "A/C Bedroom":{
         "controlling":"A/C",
