@@ -1,3 +1,4 @@
+import logging
 import os
 from dotenv import load_dotenv
 from pprint import pprint
@@ -7,6 +8,8 @@ import math
 import json
 import inspect
 import asyncio
+
+# print("__package__, __name__ ==", __package__, __name__)
 
 # actual path of the script's directory, regardless of where it's being called from
 path_ = os.path.dirname(inspect.getabsfile(inspect.currentframe()))
@@ -20,19 +23,37 @@ except:
 # import wyze_sdk
 # wyze_sdk.set_file_logger(__name__, 'tmp/log.log')
 
-import logging
 # create logger
-sunlight_logger = logging.getLogger(f"HA.{__name__}")
-# sunlight_logger = logging.getLogger(__name__)
+sunlight_logger = None#logging.getLogger(f"HA.{__name__}")
+# import __main__
 
 try:
     load_dotenv()
     latitude = float(os.environ['LAT'])
     longitude = float(os.environ['LON'])
 except Exception as e:
-    sunlight_logger.error(f"Error: could not load latitude and longitude from environment: {e}")
+    raise Exception(f"Error: could not load latitude and longitude from environment") from e
+    # sunlight_logger.error(f"Error: could not load latitude and longitude from environment: {e}")
 
 def run(client=None,bulbs=[],bulb_props={},now=None,log=True) :
+    # if log=False is passed, we don't want to do any logging, so set to a null handler
+    global sunlight_logger
+    if log == False :
+        # set sunlight_logger to null handler
+        sunlight_logger = logging.getLogger("null")
+        # print("setting sunlight_logger to null handler")
+    else :
+        # otherwise, we have to reset to the actual logger (in case False was passed previously)
+        # this is clearly not the best way to handle this, but it'll work for now
+        # probably this whole project needs to be re-written using classes
+        sunlight_logger = logging.getLogger(f"HA.{__name__}")
+        # print(str(__main__.logger.handlers))
+        # print("setting sunlight_logger to regular handlers")
+
+
+    sunlight_logger.info('Running sunlight scene...')
+
+    # run scene asynchronously
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError as e:
@@ -41,28 +62,15 @@ def run(client=None,bulbs=[],bulb_props={},now=None,log=True) :
             asyncio.set_event_loop(loop)
         else:
             raise
+    loop.run_until_complete(_run(client,bulbs,bulb_props,now))
 
-    loop.run_until_complete(_run(client,bulbs,bulb_props,now,log))
     return current_baseline
 
-async def _run(client=None,bulbs=[],bulb_props={},now=None,log=True) :
+async def _run(client=None,bulbs=[],bulb_props={},now=None) :
     settings = get_user_settings()
 
     temp_range = (1800,6500)
     brightness_range = (0,100)
-
-    # if log=False is passed, we don't want to do any logging, so set to a null handler
-    if log == False :
-        # set sunlight_logger to null handler
-        global sunlight_logger
-        sunlight_logger = logging.getLogger("null")
-    else :
-        # otherwise, we have to reset to the actual logger (in case False was passed previously)
-        # this is clearly not the best way to handle this, but it'll work for now
-        # probably this whole project needs to be re-written using classes
-        sunlight_logger = logging.getLogger(f"HA.{__name__}")
-
-    sunlight_logger.info('Running sunlight scene...')
 
     if len(bulbs) > 0 and client is None or isinstance(client,list) :
         err = 'Must pass client object to sunlight.run()'
@@ -190,6 +198,8 @@ async def _run(client=None,bulbs=[],bulb_props={},now=None,log=True) :
 
 
 async def set_bulb_values(client, bulb, adjusted_temp, adjusted_brightness, turn_on, max_name_length, adjusted_srt, adjusted_sst) :
+    # print(str(__main__.logger.handlers))
+
     # SEE IF BULB IS ACTUALLY ON OR OFF ALREADY
     try:
         is_on = client.bulbs.info(device_mac=bulb.mac).is_on

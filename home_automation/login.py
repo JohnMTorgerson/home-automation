@@ -18,22 +18,22 @@ def get_client():
         client = Client(token=os.environ['WYZE_ACCESS_TOKEN'])
         client.devices_list() # check if we have client access
     except Exception as e:
-        try:
-            print(repr(e))
-            print(f"Didn't work, trying refresh token...")
-            client = Client(token=os.environ['WYZE_REFRESH_TOKEN'])
-            client.devices_list() # check if we have client access
-        except Exception as e:
-            print(repr(e))
-            print(f"Didn't work, trying regular login and saving new access/refresh tokens...")
-            response = Client().login(email=os.environ['WYZE_EMAIL'], password=os.environ['WYZE_PASSWORD'], key_id=os.environ['WYZE_KEY_ID'], api_key=os.environ['WYZE_API_KEY'])
-            print(f"access token: {response['access_token']}")
-            print(f"refresh token: {response['refresh_token']}")
-            dotenv.set_key(dotenv_path,'WYZE_ACCESS_TOKEN',response['access_token'])
-            dotenv.set_key(dotenv_path,'WYZE_REFRESH_TOKEN',response['refresh_token'])
+        # try:
+        #     print(repr(e))
+        #     print(f"Didn't work, trying refresh token...")
+        #     client = Client(token=os.environ['WYZE_REFRESH_TOKEN'])
+        #     client.devices_list() # check if we have client access
+        # except Exception as e:
+        print(repr(e))
+        print(f"Didn't work, trying regular login and saving new access/refresh tokens...")
+        response = Client().login(email=os.environ['WYZE_EMAIL'], password=os.environ['WYZE_PASSWORD'], key_id=os.environ['WYZE_KEY_ID'], api_key=os.environ['WYZE_API_KEY'])
+        print(f"access token: {response['access_token']}")
+        print(f"refresh token: {response['refresh_token']}")
+        dotenv.set_key(dotenv_path,'WYZE_ACCESS_TOKEN',response['access_token'])
+        dotenv.set_key(dotenv_path,'WYZE_REFRESH_TOKEN',response['refresh_token'])
 
-            client = Client(token=response['access_token'])
-            client.devices_list() # check if we have client access
+        client = Client(token=response['access_token'])
+        client.devices_list() # check if we have client access
 
     print("successfully logged in to client...")
 

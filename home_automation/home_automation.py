@@ -1,4 +1,5 @@
 import os
+import sys
 from dotenv import load_dotenv
 load_dotenv()
 from pprint import pprint
@@ -7,6 +8,8 @@ try:
     from zoneinfo import ZoneInfo
 except:
     from backports.zoneinfo import ZoneInfo
+
+# print("__package__, __name__ ==", __package__, __name__)
 
 
 # # use the following when testing wyze_sdk from local fork
@@ -27,8 +30,6 @@ import get_plugs
 from devices import device_props
 import update_json
 
-# print("__package__, __name__ ==", __package__, __name__)
-
 import logging
 logger = logging.getLogger('HA')
 logger.setLevel(logging.DEBUG)
@@ -44,7 +45,7 @@ error_file_handler.setLevel(logging.ERROR)
 error_file_handler.setFormatter(formatter)
 logger.addHandler(error_file_handler)
 # log to console at DEBUG level
-stream_handler = logging.StreamHandler()
+stream_handler = logging.StreamHandler(sys.stdout)
 stream_handler.setLevel(logging.DEBUG)
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
@@ -65,6 +66,8 @@ from scenes.timebased.sunlight import sunlight
 # from scenes.timebased import wakeup
 from scenes.basic.color import color
 from scenes.basic.thermostat import thermostat
+from scenes.basic.thermostat.settings import write as thermostat_settings_change
+
 
 
 # ========== GET DEVICES ========== #
@@ -103,18 +106,27 @@ def main() :
 
 
 def sunlight_scene(grp_filter=None) :
-    filtered_bulbs = get_bulbs.filter_by_group(bulbs["living_room"],grp_filter) # if grp_filter is None, will return all
-    sunlight.run(client=client,bulbs=filtered_bulbs,bulb_props=device_props.bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # adjust the temperature according to daylight
+    try:
+        filtered_bulbs = get_bulbs.filter_by_group(bulbs["living_room"],grp_filter) # if grp_filter is None, will return all
+        sunlight.run(client=client,bulbs=filtered_bulbs,bulb_props=device_props.bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # adjust the temperature according to daylight
+    except Exception as e :
+        logger.error(f"Sunlight scene failed: {e}")
 
 def color_scene(grp_filter=None) :
-    filtered_bulbs = get_bulbs.filter_by_group(bulbs["living_room"],grp_filter) # if grp_filter is None, will return all
-    color.run(client=client,bulbs=filtered_bulbs,bulb_props=device_props.bulb_props)
+    try:
+        filtered_bulbs = get_bulbs.filter_by_group(bulbs["living_room"],grp_filter) # if grp_filter is None, will return all
+        color.run(client=client,bulbs=filtered_bulbs,bulb_props=device_props.bulb_props)
+    except Exception as e :
+        logger.error(f"Color scene failed: {e}")
 
 # def wakeup_scene() :
 #     wakeup.run(client=client,bulbs=bulbs["bedroom"],bulb_props=bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # turn on and gradually brighten the bedroom bulbs according to when my alarm is set
 
 def thermostat_scene() :
-    thermostat.run(client=client,plugs=plugs["thermostat"])
+    try:
+        thermostat.run(client=client,plugs=plugs["thermostat"])
+    except Exception as e :
+        logger.error(f"Thermostat scene failed: {e}")
 
 
 if __name__ == "__main__" :
