@@ -4,13 +4,14 @@ from dotenv import load_dotenv
 load_dotenv()
 from pprint import pprint
 import datetime
+import re
+import pkgutil
 try:
     from zoneinfo import ZoneInfo
 except:
     from backports.zoneinfo import ZoneInfo
 
 # print("__package__, __name__ ==", __package__, __name__)
-
 
 # # use the following when testing wyze_sdk from local fork
 # import sys
@@ -22,7 +23,6 @@ from wyze_sdk.errors import WyzeApiError
 # import wyze_sdk
 # wyze_sdk.set_file_logger(__name__, 'tmp/log.log')
 
-
 import login
 import get_bulbs
 import get_plugs
@@ -30,6 +30,8 @@ import get_plugs
 from devices import device_props
 import update_json
 
+
+# ========== SET UP LOGGING ========== #
 import logging
 logger = logging.getLogger('HA')
 logger.setLevel(logging.DEBUG)
@@ -49,9 +51,9 @@ stream_handler = logging.StreamHandler(sys.stdout)
 stream_handler.setLevel(logging.DEBUG)
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
-
 # null handler for modules to optionally log nothing
 logging.getLogger('null').addHandler(logging.NullHandler())
+
 
 # ========== GET WYZE CLIENT ========== #
 try:
@@ -61,12 +63,14 @@ except Exception as e:
     logger.critical(f"Could not get client. Aborting: {e}")
     raise e
 
+
 ##### SCENES #####
-from scenes.timebased.sunlight import sunlight
-# from scenes.timebased import wakeup
-from scenes.basic.color import color
-from scenes.basic.thermostat import thermostat
-from scenes.basic.thermostat.settings import write as thermostat_settings_change
+import scenes
+from scenes.sunlight import sunlight
+# from scenes.wakeup import wakeup
+from scenes.color import color
+from scenes.thermostat import thermostat
+from scenes.thermostat.settings import write as thermostat_settings_change
 
 
 
@@ -104,6 +108,32 @@ def main() :
 
 ################################
 
+def scene(scene_name,grp_filter=None,**kwargs) :
+    # make sure we have the required keyword arguments:
+    try :
+        required_kwargs = {
+            "device":str,
+            "rooms":list
+        }
+        for arg,type_ in required_kwargs.items() :
+            assert arg in kwargs, f"Missing required keyword argument \"{arg}\""
+            assert type(arg) == type_, f"\"{arg}\" must be a{'n' if (re.search('^[aeiou]',type_.__name__)) else ''} {type_.__name__}"
+    except AssertionError as e :
+        raise TypeError(e.args[0]) from None
+    
+    match device:
+        case "bulb":
+            filtered_bulbs = get_bulbs.filter_by_group(get_bulbs.get(client,rooms),grp_filter) # if grp_filter is None, will return all
+        case "plug":
+            pass
+        case "led_strip":
+            pass
+
+    for scene in pkgutil.iter_modules(scenes.__path__) :
+        print(scene.name)
+        
+    #    sunlight.run(client=client,bulbs=filtered_bulbs,bulb_props=device_props.bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # adjust the temperature according to daylight
+
 
 def sunlight_scene(grp_filter=None) :
     try:
@@ -112,6 +142,7 @@ def sunlight_scene(grp_filter=None) :
     except Exception as e :
         logger.error(f"Sunlight scene failed: {e}")
 
+# this scene should not be run in main()
 def color_scene(grp_filter=None) :
     try:
         filtered_bulbs = get_bulbs.filter_by_group(bulbs["living_room"],grp_filter) # if grp_filter is None, will return all
@@ -123,10 +154,17 @@ def color_scene(grp_filter=None) :
 #     wakeup.run(client=client,bulbs=bulbs["bedroom"],bulb_props=bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # turn on and gradually brighten the bedroom bulbs according to when my alarm is set
 
 def thermostat_scene() :
+    global client
     try:
         thermostat.run(client=client,plugs=plugs["thermostat"])
+    except WyzeApiError as e :
+        logger.debug('Thermostat scene failed: WyzeApiError')
+        if str(e).startswith("The access token has expired") :
+            logger.debug('Specifically, AccessTokenError')
+            client = login.get_client()
+            thermostat_scene()
     except Exception as e :
-        logger.error(f"Thermostat scene failed: {e}")
+        logger.error(f"Thermostat scene failed: {repr(e)}")
 
 
 if __name__ == "__main__" :

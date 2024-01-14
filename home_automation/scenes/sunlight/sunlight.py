@@ -231,7 +231,7 @@ async def set_bulb_values(client, bulb, adjusted_temp, adjusted_brightness, turn
 def get_brightness(srt,sst) :
     args = {
         'low': 40,
-        'high': 120, # the maximum is 100, but we can make this higher as long as ceiling <= 100
+        'high': 120, # the maximum value of the bulbs is 100, but we can make this higher as long as ceiling <= 100
         'floor': 50,
         'ceiling': 100,
         'steepness': 1/60, # unitless constant to adjust the steepness of the curve
@@ -433,6 +433,9 @@ def get_user_settings() :
             "on" : False,
             "group" : {
                 "ceiling" : {
+                    "brt_user_adjust": 1
+                },
+                "lamp": {
                     "brt_user_adjust": 1
                 }
             }

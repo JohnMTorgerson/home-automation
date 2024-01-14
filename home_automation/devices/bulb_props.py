@@ -6,31 +6,36 @@ max_b = 100
 bulbs = {
     "Globe":{
         "room":"Living Room",
-        "brightness_adjust": lambda b,t=None : int(b/4),
+        "groups": ["lamp"],
+        "brightness_adjust": lambda b, t=None: int(b/4),
         "temp_adjust": lambda t : max(t - 100,min_temp),
         "color_adjust": lambda c : c
     },
     "Floor Lamp":{
         "room":"Living Room",
-        "brightness_adjust": lambda b,t=None : b,
+        "groups": ["lamp"],
+        "brightness_adjust": lambda b, t=None: b,
         "temp_adjust": lambda t : t,
         "color_adjust": lambda c : c
     },
     "Wood Lamp":{
         "room":"Living Room",
-        "brightness_adjust": lambda b,t=None : b,
+        "groups": ["lamp"],
+        "brightness_adjust": lambda b, t=None: b,
         "temp_adjust": lambda t : min(t + 100,max_temp),
         "color_adjust": lambda c : c
     },
     "Left Window":{
         "room":"Living Room",
-        "brightness_adjust": lambda b,t=None : b,
+        "groups": ["lamp"],
+        "brightness_adjust": lambda b, t=None: b,
         "temp_adjust": lambda t : min(t + 250,max_temp),
         "color_adjust": lambda c : c
     },
     "Right Window":{
         "room":"Living Room",
-        "brightness_adjust": lambda b,t=None : b,
+        "groups": ["lamp"],
+        "brightness_adjust": lambda b, t=None: b,
         "temp_adjust": lambda t : min(t + 250,max_temp),
         "color_adjust": lambda c : c
     },

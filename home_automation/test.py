@@ -18,7 +18,7 @@ def main() :
     test_graphics()
 
 def test_graphics() :
-    from scenes.timebased.sunlight import sunlight_graphics as sg
+    from scenes.sunlight import sunlight_graphics as sg
     sg.open()
 
 

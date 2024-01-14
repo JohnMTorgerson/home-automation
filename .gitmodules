@@ -1,3 +1,0 @@
-[submodule "home_automation/scenes/basic/thermostat"]
-	path = home_automation/scenes/basic/thermostat
-	url = https://github.com/JohnMTorgerson/thermostat-automation.git

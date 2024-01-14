@@ -12,22 +12,22 @@ except:
 logger = logging.getLogger(f"HA.{__name__}")
 
 try :
-    from scenes.timebased.sunlight import sunlight
+    from scenes.sunlight import sunlight
 except ModuleNotFoundError as e :
     logger.error("Unable to import sunlight")
 
 try :
-    from scenes.basic.color import color
+    from scenes.color import color
 except ModuleNotFoundError as e :
     logger.error("Unable to import color")
 
 try :
-    from scenes.basic.thermostat import get_data
+    from scenes.thermostat import get_data
 except ModuleNotFoundError as e :
     logger.error("Unable to import get_data")
 
 try :
-    from scenes.basic.thermostat import thermostat
+    from scenes.thermostat import thermostat
 except ModuleNotFoundError as e :
     logger.error("Unable to import thermostat")
 
