@@ -6,7 +6,7 @@ import datetime
 import re
 
 # must use 'from .' for when the automation gui accesses this module
-# from . import estimate_abs_hum
+from . import estimate_abs_hum
 from . import write_data
 from . import weather_data_filepath
 from . import therm_data_filepath
@@ -93,8 +93,7 @@ def get_current(log=True) :
     # temp_c = sensor.temperature
     rel_hum = round(sensor.relative_humidity,1)
 
-
-    # abs_hum = estimate_abs_hum.estimate(rel_hum,temp_c)
+    abs_hum = round(estimate_abs_hum.estimate(rel_hum,temp_c),1)
 
 
     # ====== store the values ====== #
@@ -103,7 +102,7 @@ def get_current(log=True) :
         "temp_c": temp_c,
         "temp_f": temp_f,
         "rel_hum": rel_hum,
-        "abs_hum": 0#abs_hum
+        "abs_hum": abs_hum
     }
     now = datetime.datetime.now()
     # print(f"{now} temp: {temp_f}° F ({temp_c}° C), rel_hum: {rel_hum}%")# abs_hum: {abs_hum}g/m³")
@@ -111,7 +110,7 @@ def get_current(log=True) :
 
     # ====== save the values to file ====== #
     if log is True :
-        write_data.new_sensor_record(now,temp_f,rel_hum)
+        write_data.new_sensor_record(now,temp_f,rel_hum,abs_hum)
 
     return values
 
@@ -189,7 +188,8 @@ def get_logged_sensor_data(filepath=therm_data_filepath,day_range=0) :
                 try :
                     data[key] = {
                         "temp" : float(line_data[1]),
-                        "rel_hum" : float(line_data[2])
+                        "rel_hum" : float(line_data[2]),
+                        "abs_hum" : float(line_data[3]) 
                     }
                 except IndexError as e:
                     logger.debug(f'Unable to parse line {index+1} (skipping): {line} -- {e}')

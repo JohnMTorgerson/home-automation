@@ -33,11 +33,11 @@ def run(client=None,plugs={}) :
     # we want to record the current target values in the thermostat data file;
     # the reason for this is so the automation-gui can get an update on what
     # they are every day (in case they haven't been changed manually in a while)
-    # we have to do this check BEFORE checking current values or the check will always fail
+    # we have to do this check BEFORE getting current values or the check will always fail
     if first_run_of_day() :
         therm_logger.debug("Writing out temp_target and rel_hum_max into data.txt ...")
         write_data.new_ctrl_change_record(datetime.now(),{
-            "temp_target" : temp_target,
+            "temp_target" : settings_["temp_target"],
             "rel_hum_max" : settings_["rel_hum_max"]
         })
 
@@ -89,12 +89,12 @@ def run(client=None,plugs={}) :
 
     # turn Humidifier on or off based on temp and humidity targets vs current sensor values
     def run_Humidifier() :
-        # if above minimum turn humidifier off
+        # if above minimum+hyst turn humidifier off
         if (humidity >= hum_min + hum_hyst):
             # turn off Humidifier
             therm_logger.info(f'Humidity is {humidity:.2f}, {(humidity-hum_min):.2f} above min: TURNING HUMIDIFIER OFF')
             switchHumidifier(value="off",client=client, plugs=plugs)
-        # else if below minimum, minus hysteresis value, turn humidifier on
+        # else if below minimum, turn humidifier on
         elif (humidity < hum_min):
             # turn on Humidifier
             therm_logger.info(f'Humidity is {humidity:.2f}, {(hum_min-humidity):.2f} below min: TURNING HUMIDIFIER ON')
@@ -119,7 +119,7 @@ def get_current_values(log=True) :
     # we also take advantage of the variable here to determine whether the logger should log any messages in this function;
     # we realize that may be confusing, hence this comment
     try :
-        values = get_data.get_current(log) # gets current sensor values, but also logs them to ./data/data.txt
+        values = get_data.get_current(log) # gets current sensor values, but also logs them to ./data/data.txt (if 'log' is True)
         if log : therm_logger.info(f"CURRENT VALUES ==== {str(values)}") #temp_c:{values['temp_c']}, temp_f:{values['temp_f']}, rel_hum:{values['rel_hum']}, abs_hum:{values['abs_hum']}")
     except (ModuleNotFoundError, NotImplementedError) as e :
         if log : therm_logger.error(f"Unable to read current sensor values... ({repr(e)})")
@@ -129,7 +129,6 @@ def get_current_values(log=True) :
             values = get_data.get_most_recent_sensor_data()[1]
             values['temp_f'] = values['temp']
             values['temp_c'] = round((values['temp_f'] - 32) * 5/9,1)
-            values['abs_hum'] = 0
             if log : therm_logger.error(f"...using most recent logged values instead:")
         except:
             if log : therm_logger.error("...and unable to read most recent sensor values, so using dummy values (for testing):")

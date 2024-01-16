@@ -6,3 +6,4 @@ data.txt
 /screenshots
 __pycache__
 settings.json
+add_abs_hum.py

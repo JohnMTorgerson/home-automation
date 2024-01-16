@@ -20,18 +20,18 @@ def main() :
         print(f"Absolute Humidity: {ah:.2f} g/m^3")
         print("")
 
-def estimate(rel_hum,temp_c) :
-    rel_hum = float(rel_hum) / 100 # convert from percentage to fraction
+def estimate(rel_hum_pct,temp_c) :
+    rel_hum_frac = float(rel_hum_pct) / 100 # convert from percentage to fraction
     vp = vapor_pressure(temp_c)
-    ah = absolute_humidity(rel_hum,vp,temp_c)
+    ah = absolute_humidity(rel_hum_frac,vp,temp_c)
     return ah
 
-def absolute_humidity(rel_hum,vapor_pressure, temp_c) :
+def absolute_humidity(rel_hum_frac,vapor_pressure, temp_c) :
     temp_k = temp_c + 273.2
 
     vapor_density = (vapor_pressure * m) / (r * temp_k) 
 
-    abs_hum = rel_hum * vapor_density
+    abs_hum = rel_hum_frac * vapor_density
 
     return abs_hum
 
