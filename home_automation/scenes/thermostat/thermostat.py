@@ -35,10 +35,11 @@ def run(client=None,plugs={}) :
     # they are every day (in case they haven't been changed manually in a while)
     # we have to do this check BEFORE getting current values or the check will always fail
     if first_run_of_day() :
-        therm_logger.debug("Writing out temp_target and rel_hum_max into data.txt ...")
+        therm_logger.debug("Writing out temp_target and rel/abs_hum_max into data.txt ...")
         write_data.new_ctrl_change_record(datetime.now(),{
             "temp_target" : settings_["temp_target"],
-            "rel_hum_max" : settings_["rel_hum_max"]
+            "rel_hum_max" : settings_["rel_hum_max"],
+            "abs_hum_max" : settings_["abs_hum_max"]
         })
 
 
