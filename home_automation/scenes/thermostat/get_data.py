@@ -93,7 +93,7 @@ def get_current(log=True) :
     # temp_c = sensor.temperature
     rel_hum = round(sensor.relative_humidity,1)
 
-    abs_hum = round(estimate_abs_hum.estimate(rel_hum,temp_c),1)
+    abs_hum = round(estimate_abs_hum.estimate(rel_hum,temp_c),2)
 
 
     # ====== store the values ====== #

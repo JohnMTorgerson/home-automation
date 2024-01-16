@@ -102,7 +102,7 @@ def run(client=None,plugs={}) :
             switchHumidifier(value="on",client=client, plugs=plugs)
         else :
             # within hysteresis range, so do nothing, do not change state
-            therm_logger.info(f"Humidity is within hysteresis range ({(hum_min):.2f}{hum_units} <= {(humidity):.2f}{hum_units} < {hum_min+hum_hyst}{hum_units}, not changing Humidifier state")
+            therm_logger.info(f"Humidity is within hysteresis range ({(hum_min):.2f}{hum_units} <= {(humidity):.2f}{hum_units} < {(hum_min+hum_hyst):.2f}{hum_units}, not changing Humidifier state")
 
     # run A/C (if thresholds merit)
     run_AC()

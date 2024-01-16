@@ -28,14 +28,14 @@ def new_sensor_record(time_,temp,rel_hum,abs_hum) :
         logger.debug(f'Differences:\ntime_diff: {time_diff}\ntemp_diff: {temp_diff}\nrel_hum_diff: {rel_hum_diff}\nabs_hum_diff: {abs_hum_diff}')
 
         # only log differences above the following thresholds
-        if temp_diff >= 0.2 or rel_hum_diff > 0 or abs_hum_diff > 0 or time_diff > 30:
+        if temp_diff >= 0.2 or rel_hum_diff > 0 or abs_hum_diff > 0.02 or time_diff > 30:
             # print(last_line)
             # print(float(last_line[1]))
             # print(float(last_line[2]))
             # print("different!!!!")
 
             # and then only log every 10 minutes unless the following thresholds are met
-            if time_diff > 10 or temp_diff >= 0.5 or rel_hum_diff > 1 or abs_hum_diff > 0.2:
+            if time_diff > 10 or temp_diff >= 0.5 or rel_hum_diff > 1 or abs_hum_diff > 0.1:
                 logger.debug(f"diff thresholds met, writing new sensor record... (temp: {temp}º, hum: {rel_hum}%, {abs_hum}g/m³)")
                 _write(new_record)
 
