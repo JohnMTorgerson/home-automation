@@ -5,8 +5,13 @@ import datetime
 from suntime import Sun, SunTimeException
 import json
 import inspect
-from daytimes import Daytimes
-import move_shades
+import asyncio
+from .daytimes import Daytimes
+from . import move_shades
+
+# from daytimes import Daytimes
+# import move_shades
+
 
 # print("__package__, __name__ ==", __package__, __name__)
 
@@ -34,8 +39,12 @@ except Exception as e:
     raise Exception(f"Error: could not load latitude and longitude from environment") from e
     # shades_logger.error(f"Error: could not load latitude and longitude from environment: {e}")
 
-def run(now=datetime.datetime.now(tz=ZoneInfo(timezone))):#client=None,bulbs=[],bulb_props={},now=None) :
 
+
+def run(now=datetime.datetime.now(tz=ZoneInfo(timezone))):#client=None,bulbs=[],bulb_props={},now=None) :
+#     asyncio.run(_run(now))
+
+# async def _run(now):
     shades_logger.info('Running shades scene...')
 
     # get current time of day relative to sunrise and sunset (enumerated by a Daytime enum)
@@ -64,7 +73,7 @@ def run(now=datetime.datetime.now(tz=ZoneInfo(timezone))):#client=None,bulbs=[],
                 success = send_move_request("up")
                 if success:
                     # write new "up" record for today
-                    write_todays_record({"up":True,"down":False})
+                    write_todays_record({"up":str(now)})
             elif current == "up":
                 shades_logger.warning("DAY, and no record yet for today, but current state is 'up', so doing nothing")
             return
@@ -77,19 +86,19 @@ def run(now=datetime.datetime.now(tz=ZoneInfo(timezone))):#client=None,bulbs=[],
     # if after sunset
     if daytime == Daytimes.NIGHT :        
         # if there is no record for today, or if the record says we already moved the shades down,
-        if not record or record["down"] :
+        if not record or "down" in record.keys() :
             # do nothing
             shades_logger.debug("NIGHT, but no record found for today or already moved shades down, doing nothing")
             return
         # if there is an "up" record (but not down) and current state says we're up,
-        if record["up"] and not record["down"]:
+        if record["up"] and "down" not in record.keys():
             if current == "up" :
                 shades_logger.debug("NIGHT, up record found for today but no down record, and current state is 'up', so moving shades down")
                 # move shades down
                 success = send_move_request("down")
                 if success:
                     # write new "up/down" record for today
-                    write_todays_record({"up":True,"down":True})
+                    write_todays_record({"down":str(now)})
             elif current == "down":
                 shades_logger.warning("NIGHT, and found 'up' record, but not 'down' record, HOWEVER current state is 'down', so doing nothing")
 
@@ -117,12 +126,16 @@ def write_todays_record(todays_record,now=datetime.datetime.now(tz=ZoneInfo(time
         records = json.load(f)
         today = str(now.date())
 
-        records[today] = todays_record
+        try:
+            records[today] |= todays_record # try merging first
+        except KeyError as e:
+            records[today] = todays_record # we'll get here if this is the first record for today
 
         try:
             f.truncate(0)
             f.seek(0)
             json.dump(records,f,indent=4)
+            shades_logger.info(f"writing record: {json.dumps(todays_record)}")
         except Exception as e:
             shades_logger.error(f"failed to write today's record to file: {repr(e)}")
 
@@ -136,6 +149,7 @@ def write_current_state_record(state) :
             f.truncate(0)
             f.seek(0)
             json.dump(records,f,indent=4)
+            shades_logger.info(f"writing current state: \"{state}\"")
         except Exception as e:
             shades_logger.error(f"failed to write current state to record file: {repr(e)}")
 
@@ -228,17 +242,19 @@ def get_relative_time(now=datetime.datetime.now(tz=ZoneInfo(timezone))):
         return data
 
 def send_move_request(dir) :
-    shades_logger.debug(f"moving shades {dir}")
+    shades_logger.info(f"moving shades {dir}")
 
     try:
         response = move_shades.request(dir)
         shades_logger.debug(f"server response: {response}")
+        if "Success" in response :
+            write_current_state_record(dir)
+            return True
     except Exception as e:
         shades_logger.error(f"problem requesting shades move: {repr(e)}")
         return False
 
-    write_current_state_record(dir)
-    return True
+    return False
 
 # def clamp(value,range) :
 #     return max(range[0],min(range[1],value))

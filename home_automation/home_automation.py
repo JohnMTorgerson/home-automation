@@ -67,6 +67,7 @@ except Exception as e:
 ##### SCENES #####
 import scenes
 from scenes.sunlight import sunlight
+from scenes.shades import shades
 # from scenes.wakeup import wakeup
 from scenes.color import color
 from scenes.thermostat import thermostat
@@ -101,6 +102,7 @@ def main() :
     #  ===== run scenes on specified devices ===== #
     sunlight_scene()
     thermostat_scene()
+    shades_scene()
 
     # updates json data dump for the automation-gui to read from
     update_json.update()
@@ -140,7 +142,13 @@ def sunlight_scene(grp_filter=None) :
         filtered_bulbs = get_bulbs.filter_by_group(bulbs["living_room"],grp_filter) # if grp_filter is None, will return all
         sunlight.run(client=client,bulbs=filtered_bulbs,bulb_props=device_props.bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # adjust the temperature according to daylight
     except Exception as e :
-        logger.error(f"Sunlight scene failed: {e}")
+        logger.error(f"Sunlight scene failed: {repr(e)}")
+
+def shades_scene(grp_filter=None) :
+    try:
+        shades.run()#client=client,bulbs=filtered_bulbs,bulb_props=device_props.bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central')))
+    except Exception as e :
+        logger.error(f"Shades scene failed: {repr(e)}")
 
 # this scene should not be run in main()
 def color_scene(grp_filter=None) :
@@ -148,7 +156,7 @@ def color_scene(grp_filter=None) :
         filtered_bulbs = get_bulbs.filter_by_group(bulbs["living_room"],grp_filter) # if grp_filter is None, will return all
         color.run(client=client,bulbs=filtered_bulbs,bulb_props=device_props.bulb_props)
     except Exception as e :
-        logger.error(f"Color scene failed: {e}")
+        logger.error(f"Color scene failed: {repr(e)}")
 
 # def wakeup_scene() :
 #     wakeup.run(client=client,bulbs=bulbs["bedroom"],bulb_props=bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central'))) # turn on and gradually brighten the bedroom bulbs according to when my alarm is set
