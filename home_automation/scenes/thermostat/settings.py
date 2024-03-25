@@ -34,7 +34,7 @@ def write(settings_update) :
         # then, if any of the changes were to the following keys,
         # we want to log them into data.txt so that the gui can make
         # use of them for visual reference
-        ctrl_change_keys_master = {"on","temp_target","rel_hum_max","rel_hum_min"}
+        ctrl_change_keys_master = {"on","temp_target","rel_hum_max","rel_hum_min","abs_hum_max","abs_hum_min"}
         ctrl_change_keys = list(set(settings_update.keys()) & ctrl_change_keys_master) # compare update to set of relevant keys
         # logger.debug("CTRL_CHANGE_KEYS: " + str(ctrl_change_keys))
         if len(ctrl_change_keys) > 0 : # if any relevant keys were present in the update
