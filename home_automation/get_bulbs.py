@@ -1,7 +1,12 @@
+import logging
 import get_devices
 from devices import device_props
 from pprint import pprint
 # from wyze_sdk import Client
+
+# create logger
+logger = logging.getLogger(f"HA.{__name__}")
+
 
 # ========== BULBS ========== #
 # get bulbs for lighting scenes
@@ -9,8 +14,12 @@ def get(client, rooms=None) :
     if rooms is not None :
         # if a list of rooms was specified,
         # return list of bulbs in that room
-        bulbs = get_devices.get_by_type(client,'MeshLight')
-        return [bulb for bulb in bulbs if bulb["room"] in rooms]
+        try:
+            bulbs = get_devices.get_by_type(client,'MeshLight')
+            return [bulb for bulb in bulbs if bulb["room"] in rooms]
+        except:
+            logger.warning(f"Could not get bulbs (bad client object), returning empty list of bulbs")
+            return []
 
     else :
         # if no rooms were provided,
@@ -23,28 +32,33 @@ def get(client, rooms=None) :
             "bedroom" : []
         }
 
-        bulbs["all"] = get_devices.get_by_type(client,'MeshLight')
+        try:
 
-        # bulbs["living_room"] = list(filter(lambda b : bulb_props.bulbs[b.nickname]["room"] == "Living Room",bulbs))
-        for bulb in bulbs["all"] :
-            print(bulb.nickname)
+            bulbs["all"] = get_devices.get_by_type(client,'MeshLight')
 
-            b_prop = device_props.bulb_props.bulbs.get(bulb.nickname) # safe if there is no bulb of that nickname
+            # bulbs["living_room"] = list(filter(lambda b : bulb_props.bulbs[b.nickname]["room"] == "Living Room",bulbs))
+            for bulb in bulbs["all"] :
+                # print(bulb.nickname)
 
-            pprint(b_prop)
+                b_prop = device_props.bulb_props.bulbs.get(bulb.nickname) # safe if there is no bulb of that nickname
 
-            if b_prop :
-                # living room bulbs
-                if b_prop["room"] == "Living Room" :
-                    bulbs["living_room"].append(bulb)
-                # kitchen bulbs
-                if b_prop["room"] == "Kitchen" :
-                    bulbs["kitchen"].append(bulb)
-                # bedroom bulbs
-                if b_prop["room"] == "Bedroom" :
-                    bulbs["bedroom"].append(bulb)
+                pprint(b_prop)
 
-        pprint(bulbs)
+                if b_prop :
+                    # living room bulbs
+                    if b_prop["room"] == "Living Room" :
+                        bulbs["living_room"].append(bulb)
+                    # kitchen bulbs
+                    if b_prop["room"] == "Kitchen" :
+                        bulbs["kitchen"].append(bulb)
+                    # bedroom bulbs
+                    if b_prop["room"] == "Bedroom" :
+                        bulbs["bedroom"].append(bulb)
+        
+        except:
+            logger.warning(f"Could not get bulbs (bad client object), returning empty list of bulbs")
+
+        # pprint(bulbs)
 
         return bulbs
 

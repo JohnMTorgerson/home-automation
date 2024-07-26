@@ -60,8 +60,8 @@ try:
     # client = Client(email=os.environ['WYZE_EMAIL'], password=os.environ['WYZE_PASSWORD'])
     client = login.get_client()
 except Exception as e:
-    logger.critical(f"Could not get client. Aborting: {e}")
-    raise e
+    logger.critical(f"!!!!! COULD NOT GET WYZE CLIENT !!!!! {e}")
+    client = None
 
 
 ##### SCENES #####

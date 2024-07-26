@@ -220,6 +220,7 @@ def get_relative_time(now=datetime.datetime.now(tz=ZoneInfo(timezone))):
         shades_logger.debug(f"Now: {now}")
 
         sunrise = sun.get_local_sunrise_time(now).replace(tzinfo=datetime.timezone.utc).astimezone(ZoneInfo(timezone))
+        # sunrise = sun.get_local_sunrise_time(now)
         shades_logger.debug(f"Sunrise: {sunrise}")
         # sunset = sun.get_local_sunset_time(now).replace(tzinfo=pytz.utc).astimezone(pytz.timezone('America/Chicago'))
         sunset = sun.get_local_sunset_time(now).replace(tzinfo=datetime.timezone.utc).astimezone(ZoneInfo(timezone))

@@ -1,8 +1,8 @@
 import requests
-import sys
-import os
-sys.path.insert(1, os.path.abspath('/home/pi/Projects/ha-auto-shades'))
-import auto_shades
+# import sys
+# import os
+# sys.path.insert(1, os.path.abspath('/home/pi/Projects/ha-auto-shades'))
+# import auto_shades
 
 url = 'http://192.168.2.200:5000/run_shades'
 

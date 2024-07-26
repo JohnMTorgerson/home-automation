@@ -14,12 +14,12 @@ therm_logger = logging.getLogger(f"HA.{__name__}")
 
 def run(client=None,plugs={}) :
 
-    plugs_is_empty = True
-    for list_of_plugs_by_controlling in plugs :
-        if len(list_of_plugs_by_controlling) > 0 :
-            plugs_is_empty = False
-    if client == None or plugs_is_empty :
-        return
+    # plugs_is_empty = True
+    # for list_of_plugs_by_controlling in plugs :
+    #     if len(list_of_plugs_by_controlling) > 0 :
+    #         plugs_is_empty = False
+    # if client == None or plugs_is_empty :
+    #     return
 
     therm_logger.info("Running thermostat scene...")
 
@@ -145,6 +145,10 @@ def get_current_values(log=True) :
     return values
 
 def switchAC(value="", client=None, plugs=[]) :
+    if client == None :
+        therm_logger.warning(f"Could not get client, not actually switching A/C!!!")
+        return
+
     previous_value = "off"
 
     therm_logger.debug(f"Turning {value} plugs:")
@@ -167,6 +171,10 @@ def switchAC(value="", client=None, plugs=[]) :
         therm_logger.debug(f"No A/C plugs found")
 
 def switchHumidifier(value="", client=None, plugs=[]) :
+    if client == None :
+        therm_logger.warning(f"Could not get client, not actually switching Humidifier!!!")
+        return
+    
     previous_value = "off"
 
     therm_logger.debug(f"Turning {value} plugs:")
