@@ -144,9 +144,9 @@ def sunlight_scene(grp_filter=None) :
     except Exception as e :
         logger.error(f"Sunlight scene failed: {repr(e)}")
 
-def shades_scene(grp_filter=None) :
+def shades_scene(dir=None,grp_filter=None) :
     try:
-        shades.run()#client=client,bulbs=filtered_bulbs,bulb_props=device_props.bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central')))
+        shades.run(dir=dir)#client=client,bulbs=filtered_bulbs,bulb_props=device_props.bulb_props,now=datetime.datetime.now(tz=ZoneInfo('US/Central')))
     except Exception as e :
         logger.error(f"Shades scene failed: {repr(e)}")
 

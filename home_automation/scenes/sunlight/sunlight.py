@@ -31,6 +31,7 @@ try:
     load_dotenv()
     latitude = float(os.environ['LAT'])
     longitude = float(os.environ['LON'])
+    zone = os.environ['ZONE']
 except Exception as e:
     raise Exception(f"Error: could not load latitude and longitude from environment") from e
     # sunlight_logger.error(f"Error: could not load latitude and longitude from environment: {e}")
@@ -112,6 +113,7 @@ async def _run(client=None,bulbs=[],bulb_props={},now=None) :
 
             async with asyncio.TaskGroup() as tg:
                 for bulb in bulbs:
+                    sunlight_logger.debug(f"bulb: {bulb.nickname}")
 
                     # GET TIME ADJUSTMENT PER BULB (IF GIVEN), TO APPLY TO ALL SUBSEQUENT PER-BULB ADJUSTMENTS (IF GIVEN)
                     try:
@@ -383,7 +385,7 @@ def values_curve(args):
 
     return min(args['ceiling'],max(args['floor'],direction * range * math.atan((args['offset'] - args['time']) * args['steepness'])/math.pi + args['low'] + range/2))
 
-def get_relative_time(now=datetime.datetime.now(tz=ZoneInfo('US/Central'))):
+def get_relative_time(now=datetime.datetime.now(tz=ZoneInfo(zone))):
     try :
         sun = Sun(latitude, longitude)
 
@@ -392,11 +394,11 @@ def get_relative_time(now=datetime.datetime.now(tz=ZoneInfo('US/Central'))):
         today = now.date() # just used for debugging/logging
         sunlight_logger.debug(f"Now: {now}")
 
-        sunrise = sun.get_local_sunrise_time(now)#.replace(tzinfo=ZoneInfo('US/Central'))
+        sunrise = sun.get_local_sunrise_time(now).replace(tzinfo=datetime.timezone.utc).astimezone(ZoneInfo(zone))
         sunlight_logger.debug(f"Sunrise: {sunrise}")
         # sunset = sun.get_local_sunset_time(now).replace(tzinfo=pytz.utc).astimezone(pytz.timezone('America/Chicago'))
-        # sunset = sun.get_local_sunset_time(now).replace(tzinfo=datetime.timezone.utc).astimezone(ZoneInfo('US/Central'))
-        sunset = sun.get_local_sunset_time(now)
+        sunset = sun.get_local_sunset_time(now).replace(tzinfo=datetime.timezone.utc).astimezone(ZoneInfo(zone))
+        # sunset = sun.get_local_sunset_time(now)
         # bug workaround:
         if sunset < sunrise:
             sunset = sunset + datetime.timedelta(1)

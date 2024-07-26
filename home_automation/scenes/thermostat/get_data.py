@@ -4,6 +4,7 @@ import logging
 import json
 import datetime
 import re
+import time
 
 # must use 'from .' for when the automation gui accesses this module
 from . import estimate_abs_hum
@@ -24,23 +25,24 @@ def get_current(log=True) :
     # import board
     # import adafruit_dht
 
-    # # Initial the dht device, with data pin connected to:
-    # # dhtDevice = adafruit_dht.DHT11(board.D4)
+    # Initial the dht device, with data pin connected to:
+    # dhtDevice = adafruit_dht.DHT11(board.D4)
 
-    # # you can pass DHT22 use_pulseio=False if you wouldn't like to use pulseio.
-    # # This may be necessary on a Linux single board computer like the Raspberry Pi,
-    # # but it will not work in CircuitPython.
+    # you can pass DHT22 use_pulseio=False if you wouldn't like to use pulseio.
+    # This may be necessary on a Linux single board computer like the Raspberry Pi,
+    # but it will not work in CircuitPython.
     # dhtDevice = adafruit_dht.DHT11(board.D4, use_pulseio=False)
 
-    # tryAgain = True
+    # tries = 0
 
-    # while tryAgain:
+    # while tries < 4:
     #     try:
-    #         now = datetime.datetime.now()
+    #         # now = datetime.datetime.now()
 
-    #         # temp_c = dhtDevice.temperature
-    #         # temp_f = round(temp_c * (9 / 5) + 32,1)
-    #         rel_hum = round(dhtDevice.humidity,1)
+    #         temp_c = dhtDevice.temperature
+    #         temp_f = round(temp_c * (9 / 5) + 32,1)
+    #         temp_c = round(temp_c,1)
+    #         #rel_hum = round(dhtDevice.humidity,1)
 
     #     except RuntimeError as error:
     #         # Errors happen fairly often, DHT's are hard to read, just keep going
@@ -51,11 +53,15 @@ def get_current(log=True) :
     #         print(f"No values: {error.args[0]}")
     #         time.sleep(3.0)
     #         continue
+    #     except OSError as error:
+    #         print(f"OSError: {error.args[0]}")
+    #         tries += 1
+    #         continue
     #     except Exception as error:
     #         dhtDevice.exit()
     #         raise error
-
-    #     tryAgain = False
+    #
+    #     tries = 5
 
     # ========================================
     # get values from analog temp sensor (through ADS1115 analog-digital converter) ====== #
@@ -80,19 +86,23 @@ def get_current(log=True) :
 
     # print("{:>5}\t{:>5}".format("raw", "v"))
 
-    temp = chan.voltage * 100
+    # temp = chan.voltage * 100
 
-    temp_c = round(temp,1)
-    temp_f = round(temp * 9/5 + 32,1)
+    # temp_c = round(temp,1)
+    # temp_f = round(temp * 9/5 + 32,1)
 
     # ========================================
     # get values from AHT20 sensor
     import adafruit_ahtx0
     sensor = adafruit_ahtx0.AHTx0(i2c)
     # only get humidity for now, continue using analog temp sensor for temp
-    # temp_c = sensor.temperature
-    rel_hum = round(sensor.relative_humidity,1)
+    temp = sensor.temperature
+    temp_f = round(temp * 9/5 + 32,1)
+    temp_c = round(temp,1)
 
+    time.sleep(0.5) # seems to want a delay between the temp and the humidity reading
+
+    rel_hum = round(sensor.relative_humidity,1)
     abs_hum = round(estimate_abs_hum.estimate(rel_hum,temp_c),2)
 
 
@@ -105,7 +115,8 @@ def get_current(log=True) :
         "abs_hum": abs_hum
     }
     now = datetime.datetime.now()
-    # print(f"{now} temp: {temp_f}° F ({temp_c}° C), rel_hum: {rel_hum}%")# abs_hum: {abs_hum}g/m³")
+    #print("SENSOR READINGS:")
+    #print(f"{now} temp: {temp_f}° F ({temp_c}° C), rel_hum: {rel_hum}% abs_hum: {abs_hum}g/m³")
 
 
     # ====== save the values to file ====== #

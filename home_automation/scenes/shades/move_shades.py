@@ -1,4 +1,8 @@
 import requests
+import sys
+import os
+sys.path.insert(1, os.path.abspath('/home/pi/Projects/ha-auto-shades'))
+import auto_shades
 
 url = 'http://192.168.2.200:5000/run_shades'
 
@@ -11,6 +15,10 @@ def request(dir):
     r.raise_for_status() # raise an exception unless status is 200
 
     return r.text
+
+#def request(dir):
+#    auto_shades.run(dir)
+#    return "Success"
 
 # import aiohttp
 # import asyncio

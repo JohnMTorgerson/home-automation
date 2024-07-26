@@ -1,5 +1,6 @@
 import get_devices
 from devices import device_props
+from pprint import pprint
 # from wyze_sdk import Client
 
 # ========== BULBS ========== #
@@ -26,7 +27,11 @@ def get(client, rooms=None) :
 
         # bulbs["living_room"] = list(filter(lambda b : bulb_props.bulbs[b.nickname]["room"] == "Living Room",bulbs))
         for bulb in bulbs["all"] :
+            print(bulb.nickname)
+
             b_prop = device_props.bulb_props.bulbs.get(bulb.nickname) # safe if there is no bulb of that nickname
+
+            pprint(b_prop)
 
             if b_prop :
                 # living room bulbs
@@ -38,6 +43,8 @@ def get(client, rooms=None) :
                 # bedroom bulbs
                 if b_prop["room"] == "Bedroom" :
                     bulbs["bedroom"].append(bulb)
+
+        pprint(bulbs)
 
         return bulbs
 

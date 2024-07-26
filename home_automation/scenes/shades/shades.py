@@ -36,12 +36,12 @@ try:
     longitude = float(os.environ['LON'])
     timezone = os.environ['ZONE']
 except Exception as e:
-    raise Exception(f"Error: could not load latitude and longitude from environment") from e
+    raise Exception(f"Error: could not load lat/lon/timezone from environment") from e
     # shades_logger.error(f"Error: could not load latitude and longitude from environment: {e}")
 
 
 
-def run(now=datetime.datetime.now(tz=ZoneInfo(timezone))):#client=None,bulbs=[],bulb_props={},now=None) :
+def run(dir=None,now=datetime.datetime.now(tz=ZoneInfo(timezone))):#client=None,bulbs=[],bulb_props={},now=None) :
 #     asyncio.run(_run(now))
 
 # async def _run(now):
@@ -57,6 +57,14 @@ def run(now=datetime.datetime.now(tz=ZoneInfo(timezone))):#client=None,bulbs=[],
     if not current or current not in ["down","up"] :
         shades_logger.error(f"no current state found or unrecognized value ({current}), so doing nothing")
         return
+    
+    # if receiving a manual control input to go up or down, do that regardless of time of day (as long as we're not already in that state)
+    if dir and dir != current :
+        shades_logger.debug(f"Recieved manual request to move shades {dir}, and current state is {current}")
+        success = send_move_request(dir)
+        if success:
+            # write new "up/down" record for today
+            write_todays_record({f"{dir}":str(now)})
     
     # if before sunrise, do nothing
     if daytime == Daytimes.MORNING:
@@ -211,11 +219,11 @@ def get_relative_time(now=datetime.datetime.now(tz=ZoneInfo(timezone))):
         # now = now + datetime.timedelta(1)
         shades_logger.debug(f"Now: {now}")
 
-        sunrise = sun.get_local_sunrise_time(now)#.replace(tzinfo=ZoneInfo(timezone))
+        sunrise = sun.get_local_sunrise_time(now).replace(tzinfo=datetime.timezone.utc).astimezone(ZoneInfo(timezone))
         shades_logger.debug(f"Sunrise: {sunrise}")
         # sunset = sun.get_local_sunset_time(now).replace(tzinfo=pytz.utc).astimezone(pytz.timezone('America/Chicago'))
-        # sunset = sun.get_local_sunset_time(now).replace(tzinfo=datetime.timezone.utc).astimezone(ZoneInfo(timezone))
-        sunset = sun.get_local_sunset_time(now)
+        sunset = sun.get_local_sunset_time(now).replace(tzinfo=datetime.timezone.utc).astimezone(ZoneInfo(timezone))
+        # sunset = sun.get_local_sunset_time(now)
         # bug workaround:
         if sunset < sunrise:
             sunset = sunset + datetime.timedelta(1)
