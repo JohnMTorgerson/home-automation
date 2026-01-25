@@ -52,7 +52,7 @@ def run(client=None,bulbs=[],bulb_props={},now=None,log=True) :
         # print("setting sunlight_logger to regular handlers")
 
 
-    sunlight_logger.info('Running sunlight scene...')
+    sunlight_logger.info('******************** SUNLIGHT SCENE... ********************')
 
     # run scene asynchronously
     try:

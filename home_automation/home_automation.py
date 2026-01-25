@@ -97,7 +97,7 @@ except Exception as e:
 
 
 def main() :
-    logger.info('=================================================================')
+    logger.info('=============================================================================================')
 
     #  ===== run scenes on specified devices ===== #
     sunlight_scene()
@@ -120,6 +120,8 @@ def scene(scene_name,grp_filter=None,**kwargs) :
         for arg,type_ in required_kwargs.items() :
             assert arg in kwargs, f"Missing required keyword argument \"{arg}\""
             assert type(arg) == type_, f"\"{arg}\" must be a{'n' if (re.search('^[aeiou]',type_.__name__)) else ''} {type_.__name__}"
+        device = kwargs["device"]
+        rooms = kwargs["rooms"]
     except AssertionError as e :
         raise TypeError(e.args[0]) from None
     

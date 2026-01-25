@@ -26,7 +26,7 @@ logger = logging.getLogger(f"HA.{__name__}")
 
 
 def run(client=None,bulbs=[],bulb_props={},now=None) :
-    logger.info('Running wakeup scene...')
+    logger.info('******************** WAKEUP SCENE... ********************')
 
     if client is None or isinstance(client,list) :
         err = 'Must pass client object to wakeup.run()'

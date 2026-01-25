@@ -21,7 +21,7 @@ def run(client=None,plugs={}) :
     # if client == None or plugs_is_empty :
     #     return
 
-    therm_logger.info("Running thermostat scene...")
+    therm_logger.info("******************** THERMOSTAT SCENE... ********************")
 
     # fetch and save weather data (used by automation-gui)
     fetch_weather_data.fetch_and_save()

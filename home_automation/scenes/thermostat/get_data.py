@@ -19,91 +19,133 @@ logger = logging.getLogger(f"HA.{__name__}")
 def get_current(log=True) :
     import board
 
-    # no longer using DHT11 sensor; using analog sensor for temp, and AHT20 for humidity, as they are both more accurate
-    # # ========================================
-    # # get values from DHT sensor (digital sensor, does both temp and humidity) ====== #
-    # import board
-    # import adafruit_dht
-
-    # Initial the dht device, with data pin connected to:
-    # dhtDevice = adafruit_dht.DHT11(board.D4)
-
-    # you can pass DHT22 use_pulseio=False if you wouldn't like to use pulseio.
-    # This may be necessary on a Linux single board computer like the Raspberry Pi,
-    # but it will not work in CircuitPython.
-    # dhtDevice = adafruit_dht.DHT11(board.D4, use_pulseio=False)
-
-    # tries = 0
-
-    # while tries < 4:
-    #     try:
-    #         # now = datetime.datetime.now()
-
-    #         temp_c = dhtDevice.temperature
-    #         temp_f = round(temp_c * (9 / 5) + 32,1)
-    #         temp_c = round(temp_c,1)
-    #         #rel_hum = round(dhtDevice.humidity,1)
-
-    #     except RuntimeError as error:
-    #         # Errors happen fairly often, DHT's are hard to read, just keep going
-    #         print(error.args[0])
-    #         time.sleep(1.0)
-    #         continue
-    #     except TypeError as error:
-    #         print(f"No values: {error.args[0]}")
-    #         time.sleep(3.0)
-    #         continue
-    #     except OSError as error:
-    #         print(f"OSError: {error.args[0]}")
-    #         tries += 1
-    #         continue
-    #     except Exception as error:
-    #         dhtDevice.exit()
-    #         raise error
-    #
-    #     tries = 5
+    temps = []
+    hums = []
 
     # ========================================
-    # get values from analog temp sensor (through ADS1115 analog-digital converter) ====== #
-    # we'll use these temperature values instead of those from the DHT sensor, as they are more precise
-    import busio
-    import adafruit_ads1x15.ads1115 as ADS
-    from adafruit_ads1x15.analog_in import AnalogIn
+    try:
+        # get values from DHT sensor (digital sensor, does both temp and humidity) ====== #
+        import board
+        import adafruit_dht
 
-    # Create the I2C bus
-    i2c = busio.I2C(board.SCL, board.SDA)
+        # Initial the dht device, with data pin connected to:
+        dhtDevice = adafruit_dht.DHT11(board.D4)
 
-    # Create the ADC object using the I2C bus
-    ads = ADS.ADS1115(i2c)
-    # you can specify an I2C adress instead of the default 0x48
-    # ads = ADS.ADS1115(i2c, address=0x49)
+        # you can pass DHT22 use_pulseio=False if you wouldn't like to use pulseio.
+        # This may be necessary on a Linux single board computer like the Raspberry Pi,
+        # but it will not work in CircuitPython.
+        dhtDevice = adafruit_dht.DHT11(board.D4, use_pulseio=False)
 
-    # Create single-ended input on channel 0
-    chan = AnalogIn(ads, ADS.P0)
+        tries = 0
 
-    # Create differential input between channel 0 and 1
-    # chan = AnalogIn(ads, ADS.P0, ADS.P1)
+        while tries < 4:
+            try:
+                # now = datetime.datetime.now()
 
-    # print("{:>5}\t{:>5}".format("raw", "v"))
+                temp = dhtDevice.temperature
+                hum = dhtDevice.humidity
 
-    # temp = chan.voltage * 100
+                # temp_c = dhtDevice.temperature
+                # temp_f = round(temp_c * (9 / 5) + 32,1)
+                # temp_c = round(temp_c,1)
+                #rel_hum = round(dhtDevice.humidity,1)
 
-    # temp_c = round(temp,1)
-    # temp_f = round(temp * 9/5 + 32,1)
+            except RuntimeError as error:
+                # Errors happen fairly often, DHT's are hard to read, just keep going
+                print(error.args[0])
+                time.sleep(1.0)
+                continue
+            except TypeError as error:
+                print(f"No values: {error.args[0]}")
+                time.sleep(3.0)
+                continue
+            except OSError as error:
+                print(f"OSError: {error.args[0]}")
+                tries += 1
+                continue
+            except Exception as error:
+                dhtDevice.exit()
+                # raise error
+        
+            tries = 5
+
+            if temp :
+                temps.append(temp)
+
+            if hum :
+                hums.append(hum)
+    except Exception as e:
+        logger.warning(f"DHT11 sensor read failed: {repr(e)}")
 
     # ========================================
-    # get values from AHT20 sensor
-    import adafruit_ahtx0
-    sensor = adafruit_ahtx0.AHTx0(i2c)
-    # only get humidity for now, continue using analog temp sensor for temp
-    temp = sensor.temperature
-    temp_f = round(temp * 9/5 + 32,1)
+    try:
+        # get values from analog temp sensor (through ADS1115 analog-digital converter) ====== #
+        # we'll use these temperature values instead of those from the DHT sensor, as they are more precise
+        import busio
+        import adafruit_ads1x15.ads1115 as ADS
+        from adafruit_ads1x15.analog_in import AnalogIn
+
+        # Create the I2C bus
+        i2c = busio.I2C(board.SCL, board.SDA)
+
+        # Create the ADC object using the I2C bus
+        ads = ADS.ADS1115(i2c)
+        # you can specify an I2C adress instead of the default 0x48
+        # ads = ADS.ADS1115(i2c, address=0x49)
+
+        # Create single-ended input on channel 0
+        chan = AnalogIn(ads, ADS.P0)
+
+        # Create differential input between channel 0 and 1
+        # chan = AnalogIn(ads, ADS.P0, ADS.P1)
+
+        # print("{:>5}\t{:>5}".format("raw", "v"))
+
+        temp = chan.voltage * 100
+
+        # temp_c = round(temp,1)
+        # temp_f = round(temp * 9/5 + 32,1)
+
+        temps.append(temp)
+
+    except Exception as e:
+        logger.warning(f"Analog temp sensor read failed: {repr(e)}")
+
+    # ========================================
+    try:
+        # get values from AHT20 sensor
+        import adafruit_ahtx0
+        sensor = adafruit_ahtx0.AHTx0(i2c)
+        temp = sensor.temperature
+        # temp_f = round(temp * 9/5 + 32,1)
+        # temp_c = round(temp,1)
+
+        time.sleep(0.5) # seems to want a delay between the temp and the humidity reading
+
+        hum = sensor.relative_humidity
+        # rel_hum = round(sensor.relative_humidity,1)
+        # abs_hum = round(estimate_abs_hum.estimate(rel_hum,temp_c),2)
+
+        temps.append(temp)
+        hums.append(hum)
+    except Exception as e:
+        logger.warning(f"AHT20 sensor read failed: {repr(e)}")
+
+
+    # ========================================
+    # take the median of all the sensor values
+
+    print(f"temps: {temps}")
+    print(f"hums:  {hums}")
+
+    from statistics import median
+    temp = median(temps)
     temp_c = round(temp,1)
+    temp_f = round(temp * 9/5 + 32,1)
+    hum = median(hums)
+    rel_hum = round(hum,1)
+    abs_hum = round(estimate_abs_hum.estimate(hum,temp),2)
 
-    time.sleep(0.5) # seems to want a delay between the temp and the humidity reading
-
-    rel_hum = round(sensor.relative_humidity,1)
-    abs_hum = round(estimate_abs_hum.estimate(rel_hum,temp_c),2)
 
 
     # ====== store the values ====== #
@@ -120,7 +162,7 @@ def get_current(log=True) :
 
 
     # ====== save the values to file ====== #
-    if log is True :
+    if log :
         write_data.new_sensor_record(now,temp_f,rel_hum,abs_hum)
 
     return values

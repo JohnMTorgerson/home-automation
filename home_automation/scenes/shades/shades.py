@@ -9,10 +9,6 @@ import asyncio
 from .daytimes import Daytimes
 from . import move_shades
 
-# from daytimes import Daytimes
-# import move_shades
-
-
 # print("__package__, __name__ ==", __package__, __name__)
 
 # actual path of the script's directory, regardless of where it's being called from
@@ -42,10 +38,8 @@ except Exception as e:
 
 
 def run(dir=None,now=datetime.datetime.now(tz=ZoneInfo(timezone))):#client=None,bulbs=[],bulb_props={},now=None) :
-#     asyncio.run(_run(now))
 
-# async def _run(now):
-    shades_logger.info('Running shades scene...')
+    shades_logger.info('******************** SHADES SCENE... ********************')
 
     # get current time of day relative to sunrise and sunset (enumerated by a Daytime enum)
     daytime = get_daytime(now)
@@ -59,58 +53,51 @@ def run(dir=None,now=datetime.datetime.now(tz=ZoneInfo(timezone))):#client=None,
         return
     
     # if receiving a manual control input to go up or down, do that regardless of time of day (as long as we're not already in that state)
-    if dir and dir != current :
-        shades_logger.debug(f"Recieved manual request to move shades {dir}, and current state is {current}")
-        success = send_move_request(dir)
-        if success:
-            # write new "up/down" record for today
-            write_todays_record({f"{dir}":str(now)})
+    if dir:
+        if dir != current :
+            shades_logger.debug(f"Received manual request to move shades {dir}, and current state is {current}")
+            success = send_move_request(dir)
+            if success:
+                # write new "up/down" record for today
+                write_todays_record({f"{dir}":str(now)})
+        else :
+            shades_logger.warning(f"Received manual request to move shades {dir}, HOWEVER current state is already {current}, so doing nothing")
+        return
     
     # if before sunrise, do nothing
     if daytime == Daytimes.MORNING:
         shades_logger.debug("MORNING, not sunrise yet, so doing nothing")
         return
 
-    # if after sunrise and before sunset and no record yet for today, and current state is "down"
+    # if after sunrise and before sunset (i.e. daytime)
     if daytime == Daytimes.DAY:
-        # we expect no record for the day if it's the first run since sunrise
-        if not record:
-            if current == "down":
-                shades_logger.debug("DAY, and no record yet for today, and current state is 'down', so moving shades up")
-                # move shades up
-                success = send_move_request("up")
-                if success:
-                    # write new "up" record for today
-                    write_todays_record({"up":str(now)})
-            elif current == "up":
-                shades_logger.warning("DAY, and no record yet for today, but current state is 'up', so doing nothing")
-            return
-        # if we've moved the shades up already today, do nothing
-        if record and current == "up":
-            shades_logger.debug("DAY, record found, and current state is 'up', so doing nothing")
-            return
-
+        if current == "down":
+            shades_logger.debug("DAY, and current state is 'down', so moving shades up")
+            # move shades up
+            success = send_move_request("up")
+            if success:
+                # write new "up" record for today
+                write_todays_record({"up":str(now)})
+        elif current == "up":
+            shades_logger.warning("DAY, but current state is 'up', so doing nothing")
+        return
 
     # if after sunset
     if daytime == Daytimes.NIGHT :        
-        # if there is no record for today, or if the record says we already moved the shades down,
-        if not record or "down" in record.keys() :
+        # if current state is down,
+        if current == "down":
             # do nothing
-            shades_logger.debug("NIGHT, but no record found for today or already moved shades down, doing nothing")
-            return
-        # if there is an "up" record (but not down) and current state says we're up,
-        if record["up"] and "down" not in record.keys():
-            if current == "up" :
-                shades_logger.debug("NIGHT, up record found for today but no down record, and current state is 'up', so moving shades down")
-                # move shades down
-                success = send_move_request("down")
-                if success:
-                    # write new "up/down" record for today
-                    write_todays_record({"down":str(now)})
-            elif current == "down":
-                shades_logger.warning("NIGHT, and found 'up' record, but not 'down' record, HOWEVER current state is 'down', so doing nothing")
+            shades_logger.debug("NIGHT, but current state is 'down', so doing nothing")
+        # if current state says we're up,
+        elif current == "up" :
+            shades_logger.debug("NIGHT, and current state is 'up', so moving shades down")
+            # move shades down
+            success = send_move_request("down")
+            if success:
+                # write new "up/down" record for today
+                write_todays_record({"down":str(now)})
 
-            return
+        return
 
     shades_logger.warning(f"NO CONDITIONS SATISFIED, doing nothing ::: time of day: {str(daytime)} ::: today's record: {json.dumps(record)} ::: current state: {current}")
 
@@ -263,6 +250,7 @@ def send_move_request(dir) :
         shades_logger.error(f"problem requesting shades move: {repr(e)}")
         return False
 
+    shades_logger.error(f"problem requesting shades move. Server response: {repr(response)}")
     return False
 
 # def clamp(value,range) :
