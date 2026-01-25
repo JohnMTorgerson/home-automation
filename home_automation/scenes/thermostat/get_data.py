@@ -18,6 +18,7 @@ logger = logging.getLogger(f"HA.{__name__}")
 # get current temp and humidity values from sensors
 def get_current(log=True) :
     import board
+    i2c = None
 
     temps = []
     hums = []
