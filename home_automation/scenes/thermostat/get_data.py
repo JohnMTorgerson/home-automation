@@ -77,39 +77,39 @@ def get_current(log=True) :
     # except Exception as e:
     #     logger.warning(f"DHT11 sensor read failed: {repr(e)}")
 
-    # ========================================
-    try:
-        # get values from analog temp sensor (through ADS1115 analog-digital converter) ====== #
-        # we'll use these temperature values instead of those from the DHT sensor, as they are more precise
-        import busio
-        import adafruit_ads1x15.ads1115 as ADS
-        from adafruit_ads1x15.analog_in import AnalogIn
+    # # ========================================
+    # try:
+    #     # get values from analog temp sensor (through ADS1115 analog-digital converter) ====== #
+    #     # we'll use these temperature values instead of those from the DHT sensor, as they are more precise
+    #     import busio
+    #     import adafruit_ads1x15.ads1115 as ADS
+    #     from adafruit_ads1x15.analog_in import AnalogIn
 
-        # Create the I2C bus
-        i2c = busio.I2C(board.SCL, board.SDA)
+    #     # Create the I2C bus
+    #     i2c = busio.I2C(board.SCL, board.SDA)
 
-        # Create the ADC object using the I2C bus
-        ads = ADS.ADS1115(i2c)
-        # you can specify an I2C adress instead of the default 0x48
-        # ads = ADS.ADS1115(i2c, address=0x49)
+    #     # Create the ADC object using the I2C bus
+    #     ads = ADS.ADS1115(i2c)
+    #     # you can specify an I2C adress instead of the default 0x48
+    #     # ads = ADS.ADS1115(i2c, address=0x49)
 
-        # Create single-ended input on channel 0
-        chan = AnalogIn(ads, ADS.P0)
+    #     # Create single-ended input on channel 0
+    #     chan = AnalogIn(ads, ADS.P0)
 
-        # Create differential input between channel 0 and 1
-        # chan = AnalogIn(ads, ADS.P0, ADS.P1)
+    #     # Create differential input between channel 0 and 1
+    #     # chan = AnalogIn(ads, ADS.P0, ADS.P1)
 
-        # print("{:>5}\t{:>5}".format("raw", "v"))
+    #     # print("{:>5}\t{:>5}".format("raw", "v"))
 
-        temp = chan.voltage * 100
+    #     temp = chan.voltage * 100
 
-        # temp_c = round(temp,1)
-        # temp_f = round(temp * 9/5 + 32,1)
+    #     # temp_c = round(temp,1)
+    #     # temp_f = round(temp * 9/5 + 32,1)
 
-        temps.append(temp)
+    #     temps.append(temp)
 
-    except Exception as e:
-        logger.warning(f"Analog temp sensor read failed: {repr(e)}")
+    # except Exception as e:
+    #     logger.warning(f"Analog temp sensor read failed: {repr(e)}")
 
     # ========================================
     try:
@@ -126,7 +126,7 @@ def get_current(log=True) :
         # rel_hum = round(sensor.relative_humidity,1)
         # abs_hum = round(estimate_abs_hum.estimate(rel_hum,temp_c),2)
 
-        # temps.append(temp)
+        temps.append(temp)
         hums.append(hum)
 
     except Exception as e:
