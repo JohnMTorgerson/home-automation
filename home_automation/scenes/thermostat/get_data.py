@@ -114,7 +114,10 @@ def get_current(log=True) :
     # ========================================
     try:
         # get values from AHT20 sensor
+        import busio
         import adafruit_ahtx0
+        if not i2c:
+            i2c = busio.I2C(board.SCL, board.SDA)
         sensor = adafruit_ahtx0.AHTx0(i2c)
         temp = sensor.temperature
         # temp_f = round(temp * 9/5 + 32,1)
