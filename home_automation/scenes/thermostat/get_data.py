@@ -23,59 +23,59 @@ def get_current(log=True) :
     hums = []
 
     # ========================================
-    try:
-        # get values from DHT sensor (digital sensor, does both temp and humidity) ====== #
-        import board
-        import adafruit_dht
+    # try:
+    #     # get values from DHT sensor (digital sensor, does both temp and humidity) ====== #
+    #     import board
+    #     import adafruit_dht
 
-        # Initial the dht device, with data pin connected to:
-        dhtDevice = adafruit_dht.DHT11(board.D4)
+    #     # Initial the dht device, with data pin connected to:
+    #     dhtDevice = adafruit_dht.DHT11(board.D4)
 
-        # you can pass DHT22 use_pulseio=False if you wouldn't like to use pulseio.
-        # This may be necessary on a Linux single board computer like the Raspberry Pi,
-        # but it will not work in CircuitPython.
-        dhtDevice = adafruit_dht.DHT11(board.D4, use_pulseio=False)
+    #     # you can pass DHT22 use_pulseio=False if you wouldn't like to use pulseio.
+    #     # This may be necessary on a Linux single board computer like the Raspberry Pi,
+    #     # but it will not work in CircuitPython.
+    #     dhtDevice = adafruit_dht.DHT11(board.D4, use_pulseio=False)
 
-        tries = 0
+    #     tries = 0
 
-        while tries < 4:
-            try:
-                # now = datetime.datetime.now()
+    #     while tries < 4:
+    #         try:
+    #             # now = datetime.datetime.now()
 
-                temp = dhtDevice.temperature
-                hum = dhtDevice.humidity
+    #             temp = dhtDevice.temperature
+    #             hum = dhtDevice.humidity
 
-                # temp_c = dhtDevice.temperature
-                # temp_f = round(temp_c * (9 / 5) + 32,1)
-                # temp_c = round(temp_c,1)
-                #rel_hum = round(dhtDevice.humidity,1)
+    #             # temp_c = dhtDevice.temperature
+    #             # temp_f = round(temp_c * (9 / 5) + 32,1)
+    #             # temp_c = round(temp_c,1)
+    #             #rel_hum = round(dhtDevice.humidity,1)
 
-            except RuntimeError as error:
-                # Errors happen fairly often, DHT's are hard to read, just keep going
-                print(error.args[0])
-                time.sleep(1.0)
-                continue
-            except TypeError as error:
-                print(f"No values: {error.args[0]}")
-                time.sleep(3.0)
-                continue
-            except OSError as error:
-                print(f"OSError: {error.args[0]}")
-                tries += 1
-                continue
-            except Exception as error:
-                dhtDevice.exit()
-                # raise error
+    #         except RuntimeError as error:
+    #             # Errors happen fairly often, DHT's are hard to read, just keep going
+    #             print(error.args[0])
+    #             time.sleep(1.0)
+    #             continue
+    #         except TypeError as error:
+    #             print(f"No values: {error.args[0]}")
+    #             time.sleep(3.0)
+    #             continue
+    #         except OSError as error:
+    #             print(f"OSError: {error.args[0]}")
+    #             tries += 1
+    #             continue
+    #         except Exception as error:
+    #             dhtDevice.exit()
+    #             # raise error
         
-            tries = 5
+    #         tries = 5
 
-            if temp :
-                temps.append(temp)
+    #         if temp :
+    #             temps.append(temp)
 
-            if hum :
-                hums.append(hum)
-    except Exception as e:
-        logger.warning(f"DHT11 sensor read failed: {repr(e)}")
+    #         if hum :
+    #             hums.append(hum)
+    # except Exception as e:
+    #     logger.warning(f"DHT11 sensor read failed: {repr(e)}")
 
     # ========================================
     try:
@@ -126,8 +126,9 @@ def get_current(log=True) :
         # rel_hum = round(sensor.relative_humidity,1)
         # abs_hum = round(estimate_abs_hum.estimate(rel_hum,temp_c),2)
 
-        temps.append(temp)
+        # temps.append(temp)
         hums.append(hum)
+
     except Exception as e:
         logger.warning(f"AHT20 sensor read failed: {repr(e)}")
 
